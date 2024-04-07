@@ -11,7 +11,7 @@ class LeNet28(torch.nn.Module):
         self.pool2 = torch.nn.MaxPool2d(kernel_size=2)
         self.fc1 = torch.nn.Linear(16 * 5 * 5, 120)
         self.fc2 = torch.nn.Linear(120, 84)
-        self.classifier = torch.nn.Linear(84, 10)
+        self.fc = torch.nn.Linear(84, 10)
 
     def forward(self, x):
         out = F.relu(self.conv1(x))
@@ -21,7 +21,17 @@ class LeNet28(torch.nn.Module):
         out = out.view(-1, 16 * 5 * 5)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = self.classifier(out)
+        out = self.fc(out)
+        return out
+
+    def intermediate_forward(self, x):
+        out = F.relu(self.conv1(x))
+        out = self.pool1(out)
+        out = F.relu(self.conv2(out))
+        out = self.pool2(out)
+        out = out.view(-1, 16 * 5 * 5)
+        out = F.relu(self.fc1(out))
+        out = F.relu(self.fc2(out))
         return out
 
 
@@ -34,7 +44,7 @@ class LeNet(torch.nn.Module):
         self.pool2 = torch.nn.MaxPool2d(kernel_size=2)
         self.fc1 = torch.nn.Linear(16 * 5 * 5, 120)
         self.fc2 = torch.nn.Linear(120, 84)
-        self.classifier = torch.nn.Linear(84, n_classes)
+        self.fc = torch.nn.Linear(84, n_classes)
 
     def forward(self, x):
         out = F.relu(self.conv1(x))
@@ -44,7 +54,17 @@ class LeNet(torch.nn.Module):
         out = out.view(-1, 16 * 5 * 5)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = self.classifier(out)
+        out = self.fc(out)
+        return out
+
+    def intermediate_forward(self, x):
+        out = F.relu(self.conv1(x))
+        out = self.pool1(out)
+        out = F.relu(self.conv2(out))
+        out = self.pool2(out)
+        out = out.view(-1, 16 * 5 * 5)
+        out = F.relu(self.fc1(out))
+        out = F.relu(self.fc2(out))
         return out
 
 

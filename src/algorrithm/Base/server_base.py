@@ -8,6 +8,7 @@ class BaseServer:
     def __init__(self, device, backbone, configs):
         self.clients = []
         self.join_raio = configs.join_ratio
+        self.global_rounds = configs.global_rounds
         self.checkpoint_path = configs.checkpoint_path
         self.backbone = copy.deepcopy(backbone)
         self.device = device
