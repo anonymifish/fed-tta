@@ -5,9 +5,9 @@ from sklearn.metrics import accuracy_score
 from src.algorrithm.Base.client_base import BaseClient
 
 
-class FedAvgClient(BaseClient):
+class MethodClient(BaseClient):
     def __init__(self, cid, device, backbone, configs):
-        super(FedAvgClient, self).__init__(cid, device, backbone, configs)
+        super(MethodClient, self).__init__(cid, device, backbone, configs)
 
         self.optimizer = torch.optim.SGD(
             params=self.backbone.parameters(),
@@ -41,11 +41,10 @@ class FedAvgClient(BaseClient):
         self.backbone.to(self.device)
         self.backbone.eval()
         accuracy = []
-        with torch.no_grad():
-            for data, target in self.test_dataloader:
-                data, target = data.to(self.device), target.to(self.device)
-                logits = self.backbone(data)
-                pred = logits.data.max(1)[1]
-                accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
+        for data, target in self.test_dataloader:
+            data, target = data.to(self.device), target.to(self.device)
+            logits = self.backbone(data)
+            pred = logits.data.max(1)[1]
+            accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
 
         return {'acc: ': sum(accuracy) / len(accuracy)}

@@ -6,10 +6,10 @@ import torch
 import wandb
 
 from src.algorrithm.Base.server_base import BaseServer
-from src.algorrithm.FedAvg.client_fedavg import FedAvgClient
+from src.algorrithm.Method.client_method import MethodClient
 
 
-class FedAvgServer(BaseServer):
+class MethodServer(BaseServer):
     def __init__(self, device, backbone, configs):
         super().__init__(device, backbone, configs)
 
@@ -22,7 +22,7 @@ class FedAvgServer(BaseServer):
 
             active_clients = self.select_clients()
             for client in active_clients:
-                client: FedAvgClient
+                client: MethodClient
                 client_weights.append(len(client.train_dataloader))
                 start_time = time.time()
                 report = client.train()
