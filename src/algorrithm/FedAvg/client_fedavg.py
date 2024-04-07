@@ -35,7 +35,7 @@ class FedAvgClient(BaseClient):
                 self.optimizer.step()
 
         self.backbone.cpu()
-        return {'backbone': self.backbone, 'accuracy': sum(accuracy) / len(accuracy)}
+        return {'backbone': self.backbone.state_dict(), 'accuracy': sum(accuracy) / len(accuracy)}
 
     def test(self):
         pass
