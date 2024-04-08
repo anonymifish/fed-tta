@@ -2,13 +2,13 @@ import argparse
 
 parser = argparse.ArgumentParser(description='arguments for training and testing')
 
-parser.add_argument('--debug', type=bool, default=True)
+parser.add_argument('--debug', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
-parser.add_argument('--method', type=str, default='fedavg')
+parser.add_argument('--method', type=str, default='fedicon')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='debug')
+parser.add_argument('--task_name', type=str, default='default_setting_avgft')
 parser.add_argument('--step', type=str, default='train')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
@@ -31,6 +31,8 @@ parser.add_argument('--batch_size', type=int, default=32, help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
+# ---------- test --------
+parser.add_argument('--test_batch_size', type=int, default=8)
 
 # ---------- fedicon configuration --------
 parser.add_argument('--fedavg_rounds', type=int, default=50)

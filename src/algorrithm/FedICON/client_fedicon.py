@@ -118,10 +118,10 @@ class FedICONClient(BaseClient):
 
         return {'fc': self.backbone.fc.state_dict()}
 
-    def set_train_dataloader(self, train_set):
+    def set_train_set(self, train_set):
         self.original_set = train_set
         self.original_dataloader = DataLoader(
-            dataset=self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=3, pin_memory=False,
+            dataset=self.original_set, batch_size=self.batch_size, shuffle=True, num_workers=3, pin_memory=False,
         )
 
         mean = [x / 255 for x in [125.3, 123.0, 113.9]]

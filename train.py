@@ -1,4 +1,5 @@
 import logging
+import os
 
 import torch
 import wandb
@@ -8,7 +9,6 @@ from src.model.cnn import cnn
 from src.model.lenet import lenet
 from src.model.resnet import resnet18
 from utils.config import parser
-from utils.logger import change_file_path
 from utils.logger import logger
 from utils.utils import set_seed, make_save_path, prepare_server_and_clients
 
@@ -31,13 +31,18 @@ def run():
     save_path = make_save_path(configs)
     if configs.checkpoint_path == "default":
         setattr(configs, "checkpoint_path", save_path)
-    wandb.config.update(configs)
+    if not configs.debug:
+        wandb.config.update(configs, allow_val_change=True)
 
-    change_file_path(save_path)
+    file_handler = logging.FileHandler(os.path.join(save_path, 'logfile.log'))
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     logger.info(f"-------------------- configuration --------------------")
-    for key, value in configs._get_kwargs():
-        logging.info(f"configuration {key}: {value}")
+    for key, value in vars(configs).items():
+        logger.info(f"configuration {key}: {value}")
 
     logger.info("prepare dataset...")
     if configs.dataset in ['cifar10', 'cifar100']:
@@ -61,7 +66,7 @@ def run():
     server_object, client_object = prepare_server_and_clients(backbone, configs)
     device = torch.device(configs.device)
     server = server_object(device, backbone, configs)
-    clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_clients)]
+    clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
     for cid, client in enumerate(clients):
         client.set_train_set(train_datasets[cid])
     server.clients.extend(clients)

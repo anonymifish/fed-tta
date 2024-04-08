@@ -26,7 +26,7 @@ class FedICONServer(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
-            logger.info(f"fedavg round{r}, active clients: {active_clients}")
+            logger.info(f"fedavg round{r}")
             for client in active_clients:
                 client: FedICONClient
                 client_weights.append(len(client.original_dataloader))
@@ -54,7 +54,7 @@ class FedICONServer(BaseServer):
                 })
 
             if (r + 1) % 10 == 0:
-                self.make_checkpoint(r+1)
+                self.make_checkpoint(r + 1)
 
         for r in range(self.icon_rounds):
             client_weights = []
@@ -62,7 +62,7 @@ class FedICONServer(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
-            logger.info(f"icon round{r}, active clients: {active_clients}")
+            logger.info(f"icon round{r}")
             for client in active_clients:
                 client: FedICONClient
                 client_weights.append(len(client.train_dataloader))
@@ -95,7 +95,7 @@ class FedICONServer(BaseServer):
                 logger.info(f"finetune round{r}")
                 for client in active_clients:
                     client_weights.append(len(client.original_dataloader))
-                    report = client.train()
+                    report = client.finetune()
                     client_fc_states.append(report['fc'])
                 global_fc_state = self.model_average(client_fc_states, client_weights)
                 for client in self.clients:
@@ -122,7 +122,7 @@ class FedICONServer(BaseServer):
         torch.save(
             {
                 'backbone': self.backbone.state_dict(),
-                'clients': [client.make_checkpoint for client in self.clients]
+                'clients': [client.make_checkpoint() for client in self.clients]
             },
             os.path.join(self.checkpoint_path, f'model_round{r}.pt')
         )

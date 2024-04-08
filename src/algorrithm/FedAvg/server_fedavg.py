@@ -21,7 +21,7 @@ class FedAvgServer(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
-            logger.info(f"round{r}, active clients: {active_clients}")
+            logger.info(f"round{r}")
             for client in active_clients:
                 client: FedAvgClient
                 client_weights.append(len(client.train_dataloader))
@@ -48,8 +48,8 @@ class FedAvgServer(BaseServer):
                     'train_time': sum(client_train_time) / len(client_train_time),
                 })
 
-            if r % 10 == 0:
-                self.make_checkpoint(r)
+            if (r + 1) % 10 == 0:
+                self.make_checkpoint(r + 1)
 
     def test(self):
         accuracy = []
@@ -66,3 +66,5 @@ class FedAvgServer(BaseServer):
 
     def load_checkpoint(self, checkpoint):
         self.backbone.load_state_dict(checkpoint)
+        for client in self.clients:
+            client.backbone.load_state_dict(checkpoint)
