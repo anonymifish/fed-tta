@@ -8,7 +8,7 @@ parser.add_argument('--seed', type=int, default=42)
 
 parser.add_argument('--method', type=str, default='fedavg')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='default_setting')
+parser.add_argument('--task_name', type=str, default='test_fedicon')
 parser.add_argument('--step', type=str, default='test')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
@@ -32,12 +32,12 @@ parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
 # ---------- test --------
-parser.add_argument('--model_name', type=str, default='model_round100.pt')
+parser.add_argument('--model_name', type=str, default='model_round50.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 
 # ---------- fedicon configuration --------
-parser.add_argument('--fedavg_rounds', type=int, default=50)
-parser.add_argument('--icon_rounds', type=int, default=50)
+parser.add_argument('--fedavg_rounds', type=int, default=80)
+parser.add_argument('--icon_rounds', type=int, default=20)
 parser.add_argument('--icon_learning_rate', type=float, default=0.005)
 parser.add_argument('--finetune_rounds', type=int, default=20)
 parser.add_argument('--finetune_method', type=str, default='avg')

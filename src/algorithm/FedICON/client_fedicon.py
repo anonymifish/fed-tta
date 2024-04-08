@@ -179,7 +179,7 @@ class FedICONClient(BaseClient):
         ])
         self.test_set = AugPairDataset(test_set, transform=transform)
 
-        self.train_dataloader = DataLoader(
+        self.test_dataloader = DataLoader(
             dataset=self.test_set, batch_size=self.test_batch_size, shuffle=True, num_workers=3, pin_memory=False,
         )
 
@@ -207,7 +207,7 @@ class FedICONClient(BaseClient):
             z1 = self.backbone.intermediate_forward(x1)
             z2 = self.backbone.intermediate_forward(x2)
             z_all = torch.concat((z1, z2), dim=0)
-            loss = self.unsupervised_contrastive_loss(x1, x2, t=self.unsupervised_temperature)
+            loss = self.unsupervised_contrastive_loss(z1, z1, t=self.unsupervised_temperature)
             self.icon_optimizer.zero_grad()
             loss.backward()
             self.icon_optimizer.step()
