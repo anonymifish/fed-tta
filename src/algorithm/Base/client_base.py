@@ -32,5 +32,5 @@ class BaseClient:
         self.test_set = test_set
         self.test_batch_size = test_batch_size
         self.test_dataloader = DataLoader(
-            dataset=self.train_set, batch_size=self.test_batch_size, shuffle=True, num_workers=3, pin_memory=False,
+            dataset=self.test_set, batch_size=self.test_batch_size, shuffle=True, num_workers=3, pin_memory=False,
         )

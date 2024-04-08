@@ -13,7 +13,7 @@ from utils.utils import set_seed, make_save_path, prepare_server_and_clients
 
 
 def test_cifar(configs):
-    corrupt_list = []
+    corrupt_list = ['brightness', 'fog']
     no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
     data_size = 32
     data_shape = [3, 32, 32]
@@ -38,21 +38,21 @@ def test_cifar(configs):
     checkpoint_path = os.path.join(configs.checkpoint_path, configs.model_name)
     checkpoint = torch.load(checkpoint_path)
 
-    server.load_state_dict(checkpoint)
+    server.load_checkpoint(checkpoint)
     logger.info("test no shift dataset...")
     for cid, client in enumerate(server.clients):
         client.set_test_set(no_shift[cid], configs.test_batch_size)
     no_shift_accuracy = server.test()
     logger.info(f"test no shift dataset accuracy: {no_shift_accuracy}")
 
-    server.load_state_dict(checkpoint)
+    server.load_checkpoint(checkpoint)
     logger.info("test label shift dataset...")
     for cid, client in enumerate(server.clients):
         client.set_test_set(label_shift[cid], configs.test_batch_size)
     label_shift_accuracy = server.test()
     logger.info(f"test label shift dataset accuracy: {label_shift_accuracy}")
 
-    server.load_state_dict(checkpoint)
+    server.load_checkpoint(checkpoint)
     logger.info("test covariate shift dataset...")
     covariate_shift_accuracy = dict()
     for cor_type in corrupt_list:
@@ -67,11 +67,11 @@ def test_cifar(configs):
     for cor_type in corrupt_list:
         logger.info(f"test covariate shift {cor_type} dataset accuracy: {covariate_shift_accuracy_mean[cor_type]}")
     for severity in range(5):
-        severity_mean_accuracy = sum([covariate_shift_accuracy][cor_type][severity] for cor_type in corrupt_list) / len(
+        severity_mean_accuracy = sum(covariate_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
             corrupt_list)
         logger.info(f"test covariate shift {severity} mean accuracy: {severity_mean_accuracy}")
 
-    server.load_state_dict(checkpoint)
+    server.load_checkpoint(checkpoint)
     logger.info("test hybrid shift dataset...")
     hybrid_shift_accuracy = dict()
     for cor_type in corrupt_list:

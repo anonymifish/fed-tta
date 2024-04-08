@@ -48,4 +48,4 @@ class FedAvgClient(BaseClient):
                 pred = logits.data.max(1)[1]
                 accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
 
-        return {'acc: ': sum(accuracy) / len(accuracy)}
+        return {'acc': sum(accuracy) / len(accuracy)}
