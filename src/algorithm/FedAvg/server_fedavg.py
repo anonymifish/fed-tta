@@ -4,8 +4,8 @@ import time
 import torch
 import wandb
 
-from src.algorrithm.Base.server_base import BaseServer
-from src.algorrithm.FedAvg.client_fedavg import FedAvgClient
+from src.algorithm.Base.server_base import BaseServer
+from src.algorithm.FedAvg.client_fedavg import FedAvgClient
 from utils.logger import logger
 
 

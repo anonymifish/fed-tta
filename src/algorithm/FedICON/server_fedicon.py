@@ -5,8 +5,8 @@ import time
 import torch
 import wandb
 
-from src.algorrithm.Base.server_base import BaseServer
-from src.algorrithm.FedICON.client_fedicon import FedICONClient
+from src.algorithm.Base.server_base import BaseServer
+from src.algorithm.FedICON.client_fedicon import FedICONClient
 from utils.logger import logger
 
 

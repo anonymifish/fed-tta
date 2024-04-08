@@ -5,8 +5,8 @@ import time
 import torch
 import wandb
 
-from src.algorrithm.Base.server_base import BaseServer
-from src.algorrithm.Method.client_method import MethodClient
+from src.algorithm.Base.server_base import BaseServer
+from src.algorithm.Method.client_method import MethodClient
 
 
 class MethodServer(BaseServer):

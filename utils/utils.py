@@ -4,12 +4,12 @@ import random
 import numpy as np
 import torch
 
-from src.algorrithm.FedAvg.client_fedavg import FedAvgClient
-from src.algorrithm.FedAvg.server_fedavg import FedAvgServer
-from src.algorrithm.FedICON.client_fedicon import FedICONClient
-from src.algorrithm.FedICON.server_fedicon import FedICONServer
-from src.algorrithm.Method.client_method import MethodClient
-from src.algorrithm.Method.server_method import MethodServer
+from src.algorithm.FedAvg.client_fedavg import FedAvgClient
+from src.algorithm.FedAvg.server_fedavg import FedAvgServer
+from src.algorithm.FedICON.client_fedicon import FedICONClient
+from src.algorithm.FedICON.server_fedicon import FedICONServer
+from src.algorithm.Method.client_method import MethodClient
+from src.algorithm.Method.server_method import MethodServer
 
 
 def set_seed(seed: int = 0):

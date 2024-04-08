@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from src.algorrithm.Base.client_base import BaseClient
+from src.algorithm.Base.client_base import BaseClient
 from src.data.augpair_dataset import AugPairDataset
 
 

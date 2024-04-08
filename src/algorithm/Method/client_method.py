@@ -2,7 +2,7 @@ import torch.nn.functional as F
 import torch.optim
 from sklearn.metrics import accuracy_score
 
-from src.algorrithm.Base.client_base import BaseClient
+from src.algorithm.Base.client_base import BaseClient
 
 
 class MethodClient(BaseClient):
