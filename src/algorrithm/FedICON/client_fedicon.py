@@ -12,9 +12,10 @@ from src.data.augpair_dataset import AugPairDataset
 class FedICONClient(BaseClient):
     def __init__(self, cid, device, backbone, configs):
         super(FedICONClient, self).__init__(cid, device, backbone, configs)
-        self.unsupervised_temperature = configs.unsupervised_temperature
         self.temperature = configs.temperature
+        self.unsupervised_temperature = configs.unsupervised_temperature
         self.finetune_epochs = configs.finetune_epochs
+        self.icon_learning_rate = configs.icon_learning_rate
 
         self.original_set = None
         self.original_dataloader = None
@@ -23,9 +24,16 @@ class FedICONClient(BaseClient):
             lr=self.learning_rate,
         )
 
-        self.optimizer = torch.optim.SGD(
+        self.avg_optimizer = torch.optim.SGD(
             params=self.backbone.parameters(),
             lr=self.learning_rate,
+            momentum=self.momentum,
+            weight_decay=self.weight_decay,
+        )
+
+        self.icon_optimizer = torch.optim.SGD(
+            params=self.backbone.parameters(),
+            lr=self.icon_learning_rate,
             momentum=self.momentum,
             weight_decay=self.weight_decay,
         )
@@ -43,10 +51,10 @@ class FedICONClient(BaseClient):
                 pred = logits.data.max(1)[1]
                 accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
 
-                self.optimizer.zero_grad()
+                self.avg_optimizer.zero_grad()
                 loss = F.cross_entropy(logits, target)
                 loss.backward()
-                self.optimizer.step()
+                self.avg_optimizer.step()
 
         self.backbone.cpu()
         return {'backbone': self.backbone.state_dict(), 'accuracy': sum(accuracy) / len(accuracy)}
@@ -77,9 +85,9 @@ class FedICONClient(BaseClient):
                 positive = numerator.sum(dim=1)
                 loss = -torch.log(positive / denominator).mean()
 
-                self.optimizer.zero_grad()
+                self.icon_optimizer.zero_grad()
                 loss.backward()
-                self.optimizer.step()
+                self.icon_optimizer.step()
 
             self.backbone.cpu()
             return {'backbone': self.backbone.state_dict()}
@@ -174,6 +182,7 @@ class FedICONClient(BaseClient):
         self.train_dataloader = DataLoader(
             dataset=self.test_set, batch_size=self.test_batch_size, shuffle=True, num_workers=3, pin_memory=False,
         )
+
     @staticmethod
     def unsupervised_contrastive_loss(x1, x2, t=0.1):
         x1 = F.normalize(x1, dim=1)
@@ -188,7 +197,6 @@ class FedICONClient(BaseClient):
         loss = (-torch.log(pos_sim / sim_matrix.sum(dim=-1))).mean()
         return loss
 
-
     def test(self):
         self.backbone.to(self.device)
         accuracy = []
@@ -200,9 +208,9 @@ class FedICONClient(BaseClient):
             z2 = self.backbone.intermediate_forward(x2)
             z_all = torch.concat((z1, z2), dim=0)
             loss = self.unsupervised_contrastive_loss(x1, x2, t=self.unsupervised_temperature)
-            self.optimizer.zero_grad()
+            self.icon_optimizer.zero_grad()
             loss.backward()
-            self.optimizer.step()
+            self.icon_optimizer.step()
             self.backbone.eval()
             with torch.no_grad():
                 logit = self.backbone(x1)
@@ -210,8 +218,6 @@ class FedICONClient(BaseClient):
                 accuracy.append(accuracy_score(list(pred.data.cpu().numpy()), list(y.data.cpu().numpy())))
 
         return {'acc': sum(accuracy) / len(accuracy)}
-
-
 
     def make_checkpoint(self):
         return {'fc': self.backbone.fc.state_dict()}

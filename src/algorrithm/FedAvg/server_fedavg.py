@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 
@@ -7,6 +6,7 @@ import wandb
 
 from src.algorrithm.Base.server_base import BaseServer
 from src.algorrithm.FedAvg.client_fedavg import FedAvgClient
+from utils.logger import logger
 
 
 class FedAvgServer(BaseServer):
@@ -21,6 +21,7 @@ class FedAvgServer(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
+            logger.info(f"round{r}, active clients: {active_clients}")
             for client in active_clients:
                 client: FedAvgClient
                 client_weights.append(len(client.train_dataloader))
@@ -30,15 +31,15 @@ class FedAvgServer(BaseServer):
                 client_net_states.append(report['backbone'])
                 client_accuracy.append(report['accuracy'])
                 client_train_time.append(end_time - start_time)
-                logging.info(f"client{client.cid} training time: {end_time - start_time}")
+                logger.info(f"client{client.cid} training time: {end_time - start_time}")
 
             global_net_state = self.model_average(client_net_states, client_weights)
             for client in self.clients:
                 client.backbone.load_state_dict(global_net_state)
             self.backbone.load_state_dict(global_net_state)
 
-            logging.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
-            logging.info(
+            logger.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
+            logger.info(
                 f'average client accuracy: {sum([client_accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(active_clients))])}')
             if not self.debug:
                 wandb.log({

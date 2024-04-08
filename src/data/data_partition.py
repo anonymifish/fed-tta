@@ -1,10 +1,8 @@
 import logging
-import os
-import random
 
 import numpy as np
 from torch.utils.data import Subset
-from torchvision.datasets import CIFAR10, ImageFolder, CIFAR100
+from torchvision.datasets import CIFAR10, CIFAR100
 from torchvision.transforms import transforms
 
 from src.data.load_cifar_corrupted import Cifar10corrupted, Cifar100corrupted
@@ -108,11 +106,3 @@ def load_domains(configs):
         pass
     else:
         pass
-
-def load_dataset(configs):
-    if configs.dataset in ['cifar10', 'cifar100']:
-        return load_cifar(configs)
-    elif configs.dataset in ['digit-5', 'PACS']:
-        return load_domains(configs)
-    else:
-        raise NotImplementedError('dataset should be cifar10, cifar100, digit-5, PACS')

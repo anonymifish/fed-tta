@@ -1,15 +1,16 @@
 import logging
-import logging
-import os
 
 import torch
 import wandb
-from src.data.data_partition.data_partition import pathological_load_train, dirichlet_load_train
-from src.models.resnet import ResNet18
-from src.models.wideresnet import WideResNet
 
+from src.data.data_partition import load_cifar
+from src.model.cnn import cnn
+from src.model.lenet import lenet
+from src.model.resnet import resnet18
 from utils.config import parser
-from utils.utils import set_seed, make_save_path
+from utils.logger import change_file_path
+from utils.logger import logger
+from utils.utils import set_seed, make_save_path, prepare_server_and_clients
 
 
 # os.environ["HTTPS_PROXY"] = "http://10.162.108.172:7890"
@@ -18,7 +19,7 @@ def run():
     configs = parser.parse_args()
 
     if not configs.debug:
-        wandb.init()
+        wandb.init(mode=configs.wandb_mode)
         for key in dict(wandb.config):
             setattr(configs, key, dict(wandb.config)[key])
         wandb.config.update(configs)
@@ -32,126 +33,42 @@ def run():
         setattr(configs, "checkpoint_path", save_path)
     wandb.config.update(configs)
 
-    logging.basicConfig(
-        level=logging.INFO,
-        filename=os.path.join(save_path, "output.log"),
-        format="[%(asctime)s %(levelname)s] %(message)s",
-        filemode="w",
-    )
+    change_file_path(save_path)
 
-    logging.info(f"-------------------- configuration --------------------")
+    logger.info(f"-------------------- configuration --------------------")
     for key, value in configs._get_kwargs():
         logging.info(f"configuration {key}: {value}")
 
-    print("prepare dataset...")
-    if configs.pathological:
-        train_datasets, num_class = pathological_load_train(
-            configs.dataset_path, configs.id_dataset, configs.num_client, configs.class_per_client, configs.dataset_seed
-        )
+    logger.info("prepare dataset...")
+    if configs.dataset in ['cifar10', 'cifar100']:
+        train_datasets, num_class = load_cifar(configs)
+        data_size = 32
+        data_shape = [3, 32, 32]
+    elif configs.dataset in ['digit-5', 'PACS', 'office-10', 'domain-net']:
+        pass
+
+    logger.info("init server and clients...")
+    if configs.backbone == 'lenet':
+        backbone = lenet(data_size, num_class)
+    elif configs.backbone in ['simplecnn', 'shallowcnn']:
+        backbone = cnn(configs.backbone, data_shape, num_class)
+    elif configs.backbone == "resnet":
+        backbone = resnet18(num_classes=num_class)
     else:
-        train_datasets, num_class = dirichlet_load_train(
-            configs.dataset_path, configs.id_dataset, configs.num_client, configs.alpha, configs.dataset_seed
-        )
+        raise ValueError("backbone unavailable")
 
-    # ---------- construct backbone model ----------
-    print("init server and clients...")
-    if configs.backbone == "resnet":
-        backbone = ResNet18(num_classes=num_class)
-    elif configs.backbone == "wideresnet":
-        backbone = WideResNet(depth=40, num_classes=num_class, widen_factor=2, dropRate=0.3)
-    else:
-        raise NotImplementedError("backbone should be ResNet or WideResNet")
-
-    # ---------- construct customized model ----------
-    if configs.method.lower() == "fedodg":
-        configs.score_model = Energy(net=MLPScore())
-        # args.score_model= Energy(net = LatentModel())
-
+    logger.info("prepare server and clients...")
+    server_object, client_object = prepare_server_and_clients(backbone, configs)
     device = torch.device(configs.device)
-
-    if configs.use_score_model:
-        configs.score_model = Energy(net=MLPScore())
-    # ---------- construct server and clients ----------
-    server_args = {
-        "join_ratio": configs.join_ratio,
-        "checkpoint_path": configs.checkpoint_path,
-        "backbone": backbone,
-        "device": device,
-        "debug": configs.debug,
-        "use_score_model": configs.use_score_model,
-        "score_model": Energy(net=MLPScore()) if configs.use_score_model else None,
-        "alpha": configs.alpha,
-        "id_dataset": configs.id_dataset,
-    }
-    client_args = [
-        {
-            "cid": cid,
-            "device": device,
-            "epochs": configs.local_epochs,
-            "backbone": backbone,
-            "batch_size": configs.batch_size,
-            "num_workers": configs.num_workers,
-            "pin_memory": configs.pin_memory,
-            "train_id_dataset": train_datasets[cid],
-            "use_score_model": configs.use_score_model,
-        }
-        for cid in range(configs.num_client)
-    ]
-
-    Server, Client, client_args, server_args = get_server_and_client(configs, client_args, server_args)
-    server = Server(server_args)
-    clients = [Client(client_args[idx]) for idx in range(configs.num_client)]
+    server = server_object(device, backbone, configs)
+    clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_clients)]
+    for cid, client in enumerate(clients):
+        client.set_train_set(train_datasets[cid])
     server.clients.extend(clients)
 
-    if configs.method == "FedRoD":
-        checkpoint = torch.load(
-            f"/root/autodl-tmp/results/{configs.id_dataset}_{configs.alpha}alpha_10clients/FedRoD_wideresnet/model_100.pt"
-        )
-        server.backbone.load_state_dict(checkpoint["global_net_state_dict"])
-        for client_checkpoint, client in zip(checkpoint["clients"], server.clients):
-            client.backbone.load_state_dict(checkpoint["global_net_state_dict"])
-            client.head.load_state_dict(client_checkpoint["head"])
-    if configs.method == "fedodg":
-        for client in server.clients:
-            client.backbone.load_state_dict(
-                torch.load(
-                    f"/root/autodl-tmp/results/{configs.id_dataset}_{configs.alpha}alpha_10clients/FedAvg_wideresnet/model_100.pt"
-                )
-            )
-            # client.backbone.load_state_dict(torch.load("/root/autodl-tmp/cifar100_wrn_pretrained_epoch_99.pt"))
+    server.fit()
 
-    if configs.method == "Ditto":
-        checkpoint = torch.load(
-            f"/root/autodl-tmp/results/{configs.id_dataset}_{configs.alpha}alpha_10clients/Ditto_wideresnet/model_100.pt"
-        )
-        server.backbone.load_state_dict(checkpoint["global_net_state_dict"])
-        for client_checkpoint, client in zip(checkpoint["clients"], server.clients):
-            client.backbone.load_state_dict(checkpoint["global_net_state_dict"])
-            client.model_per.load_state_dict(client_checkpoint["client_backbone"])
-
-    # ---------- fit the model ----------
-    logging.info("------------------------------ fit the model ------------------------------")
-    for t in range(configs.communication_rounds):
-        logging.info(f"------------------------- round {t} -------------------------")
-        server.fit()
-        if (t + 1) % 5 == 0:
-            server.make_checkpoint(t)
-            # for client in server.clients:
-            #     for g in client.score_optimizer.param_groups:
-            #         g["lr"] = g["lr"] * 0.1
-
-        # if t == 15:
-        #     for client in server.clients:
-        #         for g in client.score_optimizer.param_groups:
-        #             g["lr"] = g["lr"] * 0.1
-
-        # if (t + 1) % 50 == 0:
-        #     server.make_checkpoint(t)
-
-    # ---------- save the model ----------
-    print("save the model...")
-    server.make_checkpoint(configs.communication_rounds)
-    print("done.")
+    logger.info("done")
 
 
 if __name__ == "__main__":

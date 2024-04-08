@@ -1,16 +1,18 @@
 import logging
 import os
+import time
 
 import torch
 import wandb
 
 from src.algorrithm.Base.server_base import BaseServer
 from src.algorrithm.FedICON.client_fedicon import FedICONClient
-import time
+from utils.logger import logger
 
-class ServerFedICON(BaseServer):
+
+class FedICONServer(BaseServer):
     def __init__(self, device, backbone, configs):
-        super(ServerFedICON, self).__init__(device, backbone, configs)
+        super(FedICONServer, self).__init__(device, backbone, configs)
         self.fedavg_rounds = configs.fedavg_rounds
         self.icon_rounds = configs.icon_rounds
         self.finetune_method = configs.finetune_method
@@ -24,6 +26,7 @@ class ServerFedICON(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
+            logger.info(f"fedavg round{r}, active clients: {active_clients}")
             for client in active_clients:
                 client: FedICONClient
                 client_weights.append(len(client.original_dataloader))
@@ -33,15 +36,15 @@ class ServerFedICON(BaseServer):
                 client_net_states.append(report['backbone'])
                 client_accuracy.append(report['accuracy'])
                 client_train_time.append(end_time - start_time)
-                logging.info(f"client{client.cid} training time: {end_time - start_time}")
+                logger.info(f"client{client.cid} training time: {end_time - start_time}")
 
             global_net_state = self.model_average(client_net_states, client_weights)
             for client in self.clients:
                 client.backbone.load_state_dict(global_net_state)
             self.backbone.load_state_dict(global_net_state)
 
-            logging.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
-            logging.info(
+            logger.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
+            logger.info(
                 f'average client accuracy: {sum([client_accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(active_clients))])}')
             if not self.debug:
                 wandb.log({
@@ -50,8 +53,8 @@ class ServerFedICON(BaseServer):
                     'train_time': sum(client_train_time) / len(client_train_time),
                 })
 
-            if r % 10 == 0:
-                self.make_checkpoint(r)
+            if (r + 1) % 10 == 0:
+                self.make_checkpoint(r+1)
 
         for r in range(self.icon_rounds):
             client_weights = []
@@ -59,6 +62,7 @@ class ServerFedICON(BaseServer):
             client_train_time = []
 
             active_clients = self.select_clients()
+            logger.info(f"icon round{r}, active clients: {active_clients}")
             for client in active_clients:
                 client: FedICONClient
                 client_weights.append(len(client.train_dataloader))
@@ -67,40 +71,42 @@ class ServerFedICON(BaseServer):
                 end_time = time.time()
                 client_net_states.append(report['backbone'])
                 client_train_time.append(end_time - start_time)
-                logging.info(f"client{client.cid} training time: {end_time - start_time}")
+                logger.info(f"client{client.cid} training time: {end_time - start_time}")
 
             global_net_state = self.model_average(client_net_states, client_weights)
             for client in self.clients:
                 client.backbone.load_state_dict(global_net_state)
             self.backbone.load_state_dict(global_net_state)
 
-            logging.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
+            logger.info(f'average client train time: {sum(client_train_time) / len(client_train_time)}')
             if not self.debug:
                 wandb.log({
                     'train_time': sum(client_train_time) / len(client_train_time),
                 })
 
-            if r % 10 == 0:
-                self.make_checkpoint(r)
+            if (self.fedavg_rounds + r + 1) % 10 == 0:
+                self.make_checkpoint(self.fedavg_rounds + r + 1)
 
         for r in range(self.finetune_rounds):
             if self.finetune_method == 'avg':
                 client_weights = []
                 client_fc_states = []
                 active_clients = self.select_clients()
+                logger.info(f"finetune round{r}")
                 for client in active_clients:
                     client_weights.append(len(client.original_dataloader))
                     report = client.train()
                     client_fc_states.append(report['fc'])
                 global_fc_state = self.model_average(client_fc_states, client_weights)
                 for client in self.clients:
+                    logger.info(f"finetune client{client.cid}")
                     client.backbone.fc.load_state_dict(global_fc_state)
                 self.backbone.fc.load_state_dict(global_fc_state)
             else:
                 for client in self.clients:
                     client.finetune()
 
-        self.make_checkpoint(r)
+        self.make_checkpoint(self.fedavg_rounds + self.icon_rounds + self.finetune_rounds)
 
     def test(self):
         accuracy = []
