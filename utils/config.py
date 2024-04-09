@@ -6,10 +6,10 @@ parser.add_argument('--debug', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
-parser.add_argument('--method', type=str, default='fedavg')
+parser.add_argument('--method', type=str, default='method')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='test_fedicon')
-parser.add_argument('--step', type=str, default='test')
+parser.add_argument('--task_name', type=str, default='default_setting')
+parser.add_argument('--step', type=str, default='train')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
@@ -32,15 +32,25 @@ parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
 # ---------- test --------
-parser.add_argument('--model_name', type=str, default='model_round50.pt')
+parser.add_argument('--model_name', type=str, default='model_round100.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 
 # ---------- fedicon configuration --------
-parser.add_argument('--fedavg_rounds', type=int, default=80)
-parser.add_argument('--icon_rounds', type=int, default=20)
+parser.add_argument('--fedavg_rounds', type=int, default=0)
+parser.add_argument('--icon_rounds', type=int, default=100)
 parser.add_argument('--icon_learning_rate', type=float, default=0.005)
 parser.add_argument('--finetune_rounds', type=int, default=20)
 parser.add_argument('--finetune_method', type=str, default='avg')
 parser.add_argument('--temperature', type=float, default=0.1)
 parser.add_argument('--unsupervised_temperature', type=float, default=0.1)
 parser.add_argument('--finetune_epochs', type=int, default=5)
+
+# ---------- fedthe configuration --------
+parser.add_argument('--personal_head_epoch', type=int, default=1)
+parser.add_argument('--e_learning_rate', type=float, default=0.1)
+parser.add_argument('--the_alpha', type=float, default=0.1)
+parser.add_argument('--beta', type=float, default=0.3)
+
+# ---------- method configuration --------
+parser.add_argument('--avg_head', type=bool, default=False)
+parser.add_argument('--trade_off', type=float, default=0.5)

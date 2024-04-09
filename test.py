@@ -69,7 +69,7 @@ def test_cifar(configs):
     for severity in range(5):
         severity_mean_accuracy = sum(covariate_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
             corrupt_list)
-        logger.info(f"test covariate shift {severity} mean accuracy: {severity_mean_accuracy}")
+        logger.info(f"test covariate shift severity {severity} mean accuracy: {severity_mean_accuracy}")
 
     server.load_checkpoint(checkpoint)
     logger.info("test hybrid shift dataset...")
@@ -84,11 +84,11 @@ def test_cifar(configs):
     logger.info(
         f"test covariate shift dataset mean accuracy: {sum(hybrid_shift_accuracy_mean.values()) / len(corrupt_list)}")
     for cor_type in corrupt_list:
-        logger.info(f"test covariate shift {cor_type} dataset accuracy: {hybrid_shift_accuracy_mean[cor_type]}")
+        logger.info(f"test hybrid shift {cor_type} dataset accuracy: {hybrid_shift_accuracy_mean[cor_type]}")
     for severity in range(5):
         severity_mean_accuracy = sum(hybrid_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
             corrupt_list)
-        logger.info(f"test covariate shift {severity} mean accuracy: {severity_mean_accuracy}")
+        logger.info(f"test hybrid shift severity {severity} mean accuracy: {severity_mean_accuracy}")
 
 
 def test():

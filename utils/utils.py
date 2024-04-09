@@ -8,6 +8,8 @@ from src.algorithm.FedAvg.client_fedavg import FedAvgClient
 from src.algorithm.FedAvg.server_fedavg import FedAvgServer
 from src.algorithm.FedICON.client_fedicon import FedICONClient
 from src.algorithm.FedICON.server_fedicon import FedICONServer
+from src.algorithm.FedTHE.client_fedthe import FedTHEClient
+from src.algorithm.FedTHE.server_fedthe import FedTHEServer
 from src.algorithm.Method.client_method import MethodClient
 from src.algorithm.Method.server_method import MethodServer
 
@@ -36,7 +38,7 @@ def prepare_server_and_clients(backbone, configs):
     elif configs.method == 'fedicon':
         return FedICONServer, FedICONClient
     elif configs.method == 'fedthe':
-        raise NotImplementedError
+        return FedTHEServer, FedTHEClient
     elif configs.method == 'atp':
         raise NotImplementedError
     elif configs.method == 'method':
