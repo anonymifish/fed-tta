@@ -75,7 +75,7 @@ class MethodServer(BaseServer):
                     'train_time': sum(client_train_time) / len(client_train_time),
                 })
 
-            if (r + 1) % 1 == 0:
+            if (r + 1) % 10 == 0:
                 self.make_checkpoint(r + 1)
 
     def plain_test(self):
