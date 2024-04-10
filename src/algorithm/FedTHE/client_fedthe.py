@@ -154,6 +154,26 @@ class FedTHEClient(BaseClient):
         self.personal_head.cpu()
         return {'acc': sum(accuracy) / len(accuracy)}
 
+    def plain_test(self):
+        self.backbone.to(self.device)
+        self.personal_head.to(self.device)
+        self.backbone.eval()
+        self.personal_head.eval()
+        accuracy = []
+        with torch.no_grad():
+            for data, target in self.test_dataloader:
+                data, target = data.to(self.device), target.to(self.device)
+                z = self.backbone.intermediate_forward(data)
+                global_out = self.backbone.fc(z)
+                personal_out = self.personal_head(z)
+                logits = 0.5 * global_out + 0.5 * personal_out
+                pred = logits.data.max(1)[1]
+                accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
+
+        self.backbone.cpu()
+        self.personal_head.cpu()
+        return {'acc': sum(accuracy) / len(accuracy)}
+
     def make_checkpoint(self):
         return {
             'fc': self.personal_head.state_dict(),

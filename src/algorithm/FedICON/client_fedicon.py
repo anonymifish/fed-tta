@@ -217,6 +217,21 @@ class FedICONClient(BaseClient):
                 pred = logit.data.max(1)[1]
                 accuracy.append(accuracy_score(list(pred.data.cpu().numpy()), list(y.data.cpu().numpy())))
 
+        self.backbone.cpu()
+        return {'acc': sum(accuracy) / len(accuracy)}
+
+    def plain_test(self):
+        self.backbone.to(self.device)
+        self.backbone.eval()
+        accuracy = []
+        with torch.no_grad():
+            for data, _, target in self.test_dataloader:
+                data, target = data.to(self.device), target.to(self.device)
+                logits = self.backbone(data)
+                pred = logits.data.max(1)[1]
+                accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
+
+        self.backbone.cpu()
         return {'acc': sum(accuracy) / len(accuracy)}
 
     def make_checkpoint(self):

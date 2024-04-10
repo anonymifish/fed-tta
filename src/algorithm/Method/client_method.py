@@ -12,6 +12,8 @@ class MethodClient(BaseClient):
         super(MethodClient, self).__init__(cid, device, backbone, configs)
         self.auxiliary_head = copy.deepcopy(self.backbone.fc)
         self.trade_off = configs.trade_off
+        self.add_loss = configs.add_loss
+        self.loss_weight = configs.loss_weight
 
         self.optimizer = torch.optim.SGD(
             params=self.backbone.parameters(),
@@ -38,7 +40,10 @@ class MethodClient(BaseClient):
                 accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
                 aux_loss = F.cross_entropy(aux_logits, target)
                 original_loss = F.cross_entropy(original_logits, target)
-                loss = self.trade_off * original_loss + (1 - self.trade_off) * aux_loss
+                if self.add_loss:
+                    loss = original_loss + self.loss_weight * aux_loss
+                else:
+                    loss = self.trade_off * original_loss + (1 - self.trade_off) * aux_loss
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -61,7 +66,8 @@ class MethodClient(BaseClient):
             pred = logits.data.max(1)[1]
             accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
 
-        return {'acc: ': sum(accuracy) / len(accuracy)}
+        self.backbone.cpu()
+        return {'acc': sum(accuracy) / len(accuracy)}
 
     def test(self):
         pass

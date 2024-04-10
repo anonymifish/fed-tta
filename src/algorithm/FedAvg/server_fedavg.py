@@ -51,6 +51,9 @@ class FedAvgServer(BaseServer):
             if (r + 1) % 10 == 0:
                 self.make_checkpoint(r + 1)
 
+    def plain_test(self):
+        return self.test()
+
     def test(self):
         accuracy = []
         client_weights = []

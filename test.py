@@ -13,7 +13,7 @@ from utils.utils import set_seed, make_save_path, prepare_server_and_clients
 
 
 def test_cifar(configs):
-    corrupt_list = ['brightness', 'fog']
+    corrupt_list = ['glass_blur', 'motion_blur', 'contrast', 'impulse_noise', 'gaussian_blur']
     no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
     data_size = 32
     data_shape = [3, 32, 32]
@@ -39,56 +39,51 @@ def test_cifar(configs):
     checkpoint = torch.load(checkpoint_path)
 
     server.load_checkpoint(checkpoint)
-    logger.info("test no shift dataset...")
+    logger.info("test no-shift dataset...")
     for cid, client in enumerate(server.clients):
         client.set_test_set(no_shift[cid], configs.test_batch_size)
+    plain_no_shift_accuracy = server.plain_test()
+    logger.info(f"plain-test no-shift dataset accuracy: {plain_no_shift_accuracy}")
     no_shift_accuracy = server.test()
-    logger.info(f"test no shift dataset accuracy: {no_shift_accuracy}")
+    logger.info(f"test no-shift dataset accuracy: {no_shift_accuracy}")
 
     server.load_checkpoint(checkpoint)
-    logger.info("test label shift dataset...")
+    logger.info("test label-shift dataset...")
     for cid, client in enumerate(server.clients):
         client.set_test_set(label_shift[cid], configs.test_batch_size)
+    plain_label_shift_accuracy = server.plain_test()
+    logger.info(f"plain-test label-shift dataset accuracy: {plain_label_shift_accuracy}")
     label_shift_accuracy = server.test()
-    logger.info(f"test label shift dataset accuracy: {label_shift_accuracy}")
+    logger.info(f"test label-shift dataset accuracy: {label_shift_accuracy}")
 
-    server.load_checkpoint(checkpoint)
-    logger.info("test covariate shift dataset...")
-    covariate_shift_accuracy = dict()
-    for cor_type in corrupt_list:
-        covariate_shift_accuracy[cor_type] = []
+    for name, dataset in zip(['covariate-shift', 'hybrid-shift'], [covariate_shift, hybrid_shift]):
+        logger.info(f"test {name} dataset...")
+        plain_shift_accuracy = dict()
+        shift_accuracy = dict()
+        for cor_type in corrupt_list:
+            plain_shift_accuracy[cor_type] = []
+            shift_accuracy[cor_type] = []
+            for severity in range(5):
+                server.load_checkpoint(checkpoint)
+                for cid, client in enumerate(server.clients):
+                    client.set_test_set(dataset[cor_type][severity][cid], configs.test_batch_size)
+                plain_shift_accuracy[cor_type].append(server.plain_test())
+                shift_accuracy[cor_type].append(server.test())
+        plain_shift_accuracy_mean = {cor_type: sum(plain_shift_accuracy[cor_type]) / 5 for cor_type in corrupt_list}
+        logger.info(
+            f"plain-test {name} dataset mean accuracy: {sum(plain_shift_accuracy_mean.values()) / len(corrupt_list)}")
+        shift_accuracy_mean = {cor_type: sum(shift_accuracy[cor_type]) / 5 for cor_type in corrupt_list}
+        logger.info(f"test {name} dataset mean accuracy: {sum(shift_accuracy_mean.values()) / len(corrupt_list)}")
+        for cor_type in corrupt_list:
+            logger.info(f"plain-test {name} {cor_type} dataset accuracy: {plain_shift_accuracy_mean[cor_type]}")
+            logger.info(f"test {name} {cor_type} dataset accuracy: {shift_accuracy_mean[cor_type]}")
         for severity in range(5):
-            for cid, client in enumerate(server.clients):
-                client.set_test_set(covariate_shift[cor_type][severity][cid], configs.test_batch_size)
-            covariate_shift_accuracy[cor_type].append(server.test())
-    covariate_shift_accuracy_mean = {cor_type: sum(covariate_shift_accuracy[cor_type]) / 5 for cor_type in corrupt_list}
-    logger.info(
-        f"test covariate shift dataset mean accuracy: {sum(covariate_shift_accuracy_mean.values()) / len(corrupt_list)}")
-    for cor_type in corrupt_list:
-        logger.info(f"test covariate shift {cor_type} dataset accuracy: {covariate_shift_accuracy_mean[cor_type]}")
-    for severity in range(5):
-        severity_mean_accuracy = sum(covariate_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
-            corrupt_list)
-        logger.info(f"test covariate shift severity {severity} mean accuracy: {severity_mean_accuracy}")
-
-    server.load_checkpoint(checkpoint)
-    logger.info("test hybrid shift dataset...")
-    hybrid_shift_accuracy = dict()
-    for cor_type in corrupt_list:
-        hybrid_shift_accuracy[cor_type] = []
-        for severity in range(5):
-            for cid, client in enumerate(server.clients):
-                client.set_test_set(hybrid_shift[cor_type][severity][cid], configs.test_batch_size)
-            hybrid_shift_accuracy[cor_type].append(server.test())
-    hybrid_shift_accuracy_mean = {cor_type: sum(hybrid_shift_accuracy[cor_type]) / 5 for cor_type in corrupt_list}
-    logger.info(
-        f"test covariate shift dataset mean accuracy: {sum(hybrid_shift_accuracy_mean.values()) / len(corrupt_list)}")
-    for cor_type in corrupt_list:
-        logger.info(f"test hybrid shift {cor_type} dataset accuracy: {hybrid_shift_accuracy_mean[cor_type]}")
-    for severity in range(5):
-        severity_mean_accuracy = sum(hybrid_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
-            corrupt_list)
-        logger.info(f"test hybrid shift severity {severity} mean accuracy: {severity_mean_accuracy}")
+            plain_severity_mean_accuracy = sum(
+                plain_shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(corrupt_list)
+            logger.info(f"plain-test {name} severity {severity} mean accuracy: {plain_severity_mean_accuracy}")
+            severity_mean_accuracy = sum(shift_accuracy[cor_type][severity] for cor_type in corrupt_list) / len(
+                corrupt_list)
+            logger.info(f"test {name} severity {severity} mean accuracy: {severity_mean_accuracy}")
 
 
 def test():

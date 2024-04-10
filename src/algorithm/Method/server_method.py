@@ -78,6 +78,9 @@ class MethodServer(BaseServer):
             if (r + 1) % 10 == 0:
                 self.make_checkpoint(r + 1)
 
+    def test(self):
+        return self.plain_test()
+
     def plain_test(self):
         accuracy = []
         client_weights = []
@@ -100,5 +103,5 @@ class MethodServer(BaseServer):
     def load_checkpoint(self, checkpoint):
         self.backbone.load_state_dict(checkpoint['backbone'])
         for cid, client_checkpoint in enumerate(checkpoint['clients']):
-            self.clients[cid].backbone.load_state_dict(client_checkpoint['backbone'])
+            self.clients[cid].backbone.load_state_dict(checkpoint['backbone'])
             self.clients[cid].load_checkpoint(client_checkpoint)
