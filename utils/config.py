@@ -8,8 +8,8 @@ parser.add_argument('--seed', type=int, default=42)
 
 parser.add_argument('--method', type=str, default='method')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='trade_off_0.9')
-parser.add_argument('--step', type=str, default='test')
+parser.add_argument('--task_name', type=str, default='debug_add_loss_0.3')
+parser.add_argument('--step', type=str, default='train')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
@@ -53,6 +53,7 @@ parser.add_argument('--beta', type=float, default=0.3)
 
 # ---------- method configuration --------
 parser.add_argument('--avg_head', type=bool, default=False)
+parser.add_argument('--aux_ratio', type=float, default=0.1)
 parser.add_argument('--trade_off', type=float, default=0.3)
 parser.add_argument('--add_loss', type=bool, default=True)
-parser.add_argument('--loss_weight', type=float, default=0.5)
+parser.add_argument('--loss_weight', type=float, default=0.3)

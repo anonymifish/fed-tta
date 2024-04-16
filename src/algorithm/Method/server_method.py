@@ -14,6 +14,7 @@ class MethodServer(BaseServer):
     def __init__(self, device, backbone, configs):
         super().__init__(device, backbone, configs)
         self.avg_head = configs.avg_head
+        self.aux_ratio = configs.aux_ratio
 
     def auxiliary_head_select(self, head_states_list):
         """can not deal with join_ratio != 1.0"""
@@ -25,11 +26,12 @@ class MethodServer(BaseServer):
 
         distance = torch.norm(state_vect_matrix.unsqueeze(1) - state_vect_matrix.unsqueeze(0), dim=2)
         max_distance, max_indices = torch.max(distance, dim=1)
+        # max_distance, max_indices = torch.topk(distance, int(len(self.clients) * self.aux_ratio), dim=1)
 
         ret = []
         for cid, _ in enumerate(head_states_list):
             logger.info(f'for client{cid}, client{max_indices[cid]}\'s head has the max distance {max_distance[cid]}')
-            ret.append(head_states_list[cid])
+            ret.append(head_states_list[max_indices[cid]])
         return ret
 
     def fit(self):
