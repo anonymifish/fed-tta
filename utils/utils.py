@@ -24,7 +24,10 @@ def set_seed(seed: int = 0):
 def make_save_path(configs):
     root_path = os.path.dirname(__file__)
     root_path = os.path.join(os.path.dirname(root_path), "results")
-    dataset_setting = f"{configs.dataset}_{configs.num_client}clients_alpha{configs.alpha}"
+    if configs.dataset in ['cifar10', 'cifar100']:
+        dataset_setting = f"{configs.dataset}_{configs.num_client}clients_alpha{configs.alpha}"
+    else:
+        dataset_setting = f"{configs.dataset}_leave-{configs.leave_one_out}"
     task_path = dataset_setting + f"/{configs.method}_{configs.backbone}/{configs.task_name}"
     save_path = os.path.join(root_path, task_path)
     os.makedirs(save_path, exist_ok=True)

@@ -4,7 +4,7 @@ import os
 import torch
 import wandb
 
-from src.data.data_partition import load_cifar
+from src.data.data_partition import load_cifar, load_domains
 from src.model.cnn import cnn
 from src.model.lenet import lenet
 from src.model.resnet import resnet18
@@ -50,7 +50,13 @@ def run():
         data_size = 32
         data_shape = [3, 32, 32]
     elif configs.dataset in ['digit-5', 'PACS', 'office-10', 'domain-net']:
-        pass
+        train_datasets, num_client, num_class, data_size, data_shape = load_domains(configs)
+        setattr(configs, "num_client", num_client)
+        logger.info(f"update configuration num_client: {num_client}")
+        if not configs.debug:
+            wandb.config.update(configs, allow_val_change=True)
+    else:
+        raise ValueError('illegal dataset')
 
     logger.info("init server and clients...")
     if configs.backbone == 'lenet':

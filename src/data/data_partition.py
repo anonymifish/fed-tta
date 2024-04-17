@@ -6,6 +6,7 @@ from torchvision.datasets import CIFAR10, CIFAR100
 from torchvision.transforms import transforms
 
 from src.data.load_cifar_corrupted import Cifar10corrupted, Cifar100corrupted
+from src.data.load_domain_datasets import Digit5Dataset, PACSDataset, Office10Dataset
 
 
 def create_dirichlet_distribution(alpha: float, num_client: int, num_class: int, seed: int):
@@ -102,7 +103,42 @@ def load_cifar(configs, corrupt_list=None):
 
 
 def load_domains(configs):
-    if configs.step == 'train':
-        pass
+    domain_datasets = dict()
+    if configs.dataset == 'digit-5':
+        dataset_names = ['mnist', 'mnistm', 'svhn', 'synthesis', 'usps']
+        for name in dataset_names:
+            domain_datasets[name] = Digit5Dataset(configs.dataset_path, name)
+        num_class = 10
+        num_client = 4
+        data_size = 28
+        data_shape = [3, 28, 28]
+    elif configs.dataset == 'PACS':
+        dataset_names = ['art_painting', 'cartoon', 'photo', 'sketch']
+        for name in dataset_names:
+            domain_datasets[name] = PACSDataset(configs.dataset_path, name)
+        num_class = 7
+        num_client = 3
+        data_size = 224
+        data_shape = [3, 224, 224]
+    elif configs.dataset == 'office-10':
+        dataset_names = ['amazon', 'caltech', 'dslr', 'webcam']
+        for name in dataset_names:
+            domain_datasets[name] = Office10Dataset(configs.dataset_path, name)
+        num_class = 10
+        num_client = 3
+        data_size = 300
+        data_shape = [3, 300, 300]
+    elif configs.dataset == 'domain-net':
+        raise NotImplementedError
     else:
-        pass
+        raise ValueError(f'dataset {configs.dataset} not supported')
+
+    if configs.step == 'train':
+        train_datasets = []
+        for dataset_name in dataset_names:
+            if dataset_name == configs.leave_one_out:
+                pass
+            train_datasets.append(domain_datasets[dataset_name])
+        return train_datasets, num_client, num_class, data_size, data_shape
+    else:
+        return domain_datasets[f'{configs.leave_one_out}'], num_client, num_class, data_size, data_shape
