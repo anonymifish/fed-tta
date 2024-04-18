@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
+import matplotlib.pyplot as plt
 
 class Digit5Dataset(Dataset):
     def __init__(self, root, dataset_name):
@@ -17,39 +18,40 @@ class Digit5Dataset(Dataset):
             self.dataset_path = os.path.join(dataset_path, 'mnist_data.mat')
             mnist_data = io.loadmat(self.dataset_path)
             # mnist_train (55000, 28, 28, 1), mnist_label (55000, 10)
-            images = mnist_data['train_28'].transpose((0, 3, 1, 2))
-            label = mnist_data['label_train']
+            images = mnist_data['train_28']
+            label = torch.tensor(mnist_data['label_train'])
+            label = torch.argmax(label, dim=1)
         elif dataset_name == 'mnistm':
             self.channel = 3
             self.dataset_path = os.path.join(dataset_path, 'mnistm_with_label.mat')
             mnistm_data = io.loadmat(self.dataset_path)
             # mnistm_train (55000, 28, 28, 3), mnistm_label (55000, 10)
-            images = mnistm_data['train'].transpose((0, 3, 1, 2))
-            label = mnistm_data['label_train']
+            images = mnistm_data['train']
+            label = torch.tensor(mnistm_data['label_train'])
+            label = torch.argmax(label, dim=1)
         elif dataset_name == 'svhn':
             self.channel = 3
             self.dataset_path = os.path.join(dataset_path, 'svhn_train_32x32.mat')
             svhn_data = io.loadmat(self.dataset_path)
             # svhn_train (32, 32, 3, 73257), svhn_label (73257, 1)
-            images = svhn_data['X'].transpose((3, 2, 0, 1))
-            label = svhn_data['y']
-            label = torch.nn.functional.one_hot(torch.tensor(label).squeeze(), num_classes=10)
+            images = svhn_data['X'].transpose((3, 0, 1, 2))
+            label = torch.tensor(svhn_data['y']).squeeze()
+            label[label == 10] = 0
+            label = label.long()
         elif dataset_name == 'synthesis':
             self.channel = 3
             self.dataset_path = os.path.join(dataset_path, 'syn_number.mat')
             synthesis_data = io.loadmat(self.dataset_path)
             # synthesis_train (25000, 32, 32, 3), synthesis_label (25000, 1)
-            images = synthesis_data['train_data'].transpose((0, 3, 1, 2))
-            label = synthesis_data['train_label']
-            label = torch.nn.functional.one_hot(torch.tensor(label).squeeze(), num_classes=10)
+            images = synthesis_data['train_data']
+            label = torch.tensor(synthesis_data['train_label']).squeeze().long()
         elif dataset_name == 'usps':
             self.channel = 1
             self.dataset_path = os.path.join(dataset_path, 'usps_28x28.mat')
             usps_data = io.loadmat(self.dataset_path)
             # usps_train (7438, 1, 28, 28), usps_label (7438, 1)
-            images = usps_data['dataset'][0][0]
-            label = usps_data['dataset'][0][1]
-            label = torch.nn.functional.one_hot(torch.tensor(label).squeeze(), num_classes=10)
+            images = usps_data['dataset'][0][0].transpose((0, 2, 3, 1))
+            label = torch.tensor(usps_data['dataset'][0][1]).squeeze().long()
         else:
             raise ValueError('Dataset not in digit-5')
 
@@ -75,7 +77,7 @@ class Digit5Dataset(Dataset):
         img, target = self.data[index], self.targets[index]
 
         if self.channel == 1:
-            img = Image.fromarray(img, mode='L')
+            img = Image.fromarray(img.squeeze(), mode='L')
         else:
             img = Image.fromarray(img, mode='RGB')
 

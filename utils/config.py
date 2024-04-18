@@ -2,7 +2,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='arguments for training and testing')
 
-parser.add_argument('--debug', type=bool, default=True)
+parser.add_argument('--debug', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
@@ -12,7 +12,7 @@ parser.add_argument('--task_name', type=str, default='debug_load_data')
 parser.add_argument('--step', type=str, default='train')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='digit-5')
-parser.add_argument('--leave_one_out', type=str, default='mnist')
+parser.add_argument('--leave_one_out', type=str, default='usps')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
 parser.add_argument('--alpha', type=float, default=0.1, help='parameter of dirichlet distribution')
 parser.add_argument('--dataset_path', type=str, default='/home/yfy/datasets/', help='path to dataset')
@@ -20,7 +20,7 @@ parser.add_argument('--num_class', type=int, default=10, help='number of dataset
 parser.add_argument('--dataset_seed', type=int, default=21, help='seed to split dataset')
 parser.add_argument('--new_dataset_seed', type=int, default=30, help='seed to split dataset')
 # ---------- device ----------
-parser.add_argument('--device', type=str, default='cuda:0', help='device')
+parser.add_argument('--device', type=str, default='cuda:1', help='device')
 # ---------- server configuration ----------
 parser.add_argument('--join_ratio', type=float, default=1.0, help='join ratio')
 parser.add_argument('--global_rounds', type=int, default=100, help='total communication round')

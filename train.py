@@ -97,8 +97,12 @@ if __name__ == "__main__":
             },
         }
 
+        if args.dataset in ['cifar10', 'cifar100']:
+            project_name = f"{args.dataset}_{args.num_client}clients_alpha{args.alpha}_fedtta"
+        else:
+            project_name = f"{args.dataset}_leave-{args.leave_one_out}"
         sweep_id = wandb.sweep(
             sweep_configuration,
-            project=f"{args.dataset}_{args.num_client}clients_alpha{args.alpha}_fedtta",
+            project=project_name,
         )
         wandb.agent(sweep_id, function=run)
