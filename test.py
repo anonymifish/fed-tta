@@ -3,7 +3,7 @@ import os
 
 import torch
 
-from src.data.data_partition import load_cifar
+from src.data.data_partition import load_cifar, load_domains
 from src.model.cnn import cnn
 from src.model.lenet import lenet
 from src.model.resnet import resnet18
@@ -86,6 +86,40 @@ def test_cifar(configs):
             logger.info(f"test {name} severity {severity} mean accuracy: {severity_mean_accuracy}")
 
 
+def test_domain(configs):
+    test_datasets, num_client, num_class, data_size, data_shape = load_domains(configs)
+    setattr(configs, "num_client", num_client)
+
+    logger.info("init server and clients...")
+    if configs.backbone == 'lenet':
+        backbone = lenet(data_size, num_class)
+    elif configs.backbone in ['simplecnn', 'shallowcnn']:
+        backbone = cnn(configs.backbone, data_shape, num_class)
+    elif configs.backbone == "resnet":
+        backbone = resnet18(num_classes=num_class)
+    else:
+        raise ValueError("backbone unavailable")
+
+    logger.info("prepare server and clients...")
+    server_object, client_object = prepare_server_and_clients(backbone, configs)
+    device = torch.device(configs.device)
+    server = server_object(device, backbone, configs)
+    clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
+    server.clients.extend(clients)
+
+    checkpoint_path = os.path.join(configs.checkpoint_path, configs.model_name)
+    checkpoint = torch.load(checkpoint_path)
+
+    server.load_checkpoint(checkpoint)
+    logger.info(f"test domain {configs.leave_one_out}...")
+    for cid, client in enumerate(server.clients):
+        client.set_test_set(test_datasets[cid], configs.test_batch_size)
+    plain_accuracy = server.plain_test()
+    logger.info(f"plain-test domain {configs.leave_one_out} accuracy: {plain_accuracy}")
+    accuracy = server.test()
+    logger.info(f"test no-shift dataset accuracy: {accuracy}")
+
+
 def test():
     configs = parser.parse_args()
     set_seed(configs.seed)
@@ -107,7 +141,7 @@ def test():
     if configs.dataset in ['cifar10', 'cifar100']:
         test_cifar(configs)
     elif configs.dataset in ['digit-5', 'PACS', 'office-10', 'domain-net']:
-        pass
+        test_domain(configs)
 
     logger.info("done")
 

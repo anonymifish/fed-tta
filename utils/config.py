@@ -9,10 +9,10 @@ parser.add_argument('--seed', type=int, default=42)
 parser.add_argument('--method', type=str, default='fedavg')
 parser.add_argument('--backbone', type=str, default='resnet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
 parser.add_argument('--task_name', type=str, default='debug_load_data')
-parser.add_argument('--step', type=str, default='train')
+parser.add_argument('--step', type=str, default='test')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='digit-5')
-parser.add_argument('--leave_one_out', type=str, default='usps')
+parser.add_argument('--leave_one_out', type=str, default='mnist')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
 parser.add_argument('--alpha', type=float, default=0.1, help='parameter of dirichlet distribution')
 parser.add_argument('--dataset_path', type=str, default='/home/yfy/datasets/', help='path to dataset')
@@ -33,7 +33,7 @@ parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
 # ---------- test --------
-parser.add_argument('--model_name', type=str, default='model_round100.pt')
+parser.add_argument('--model_name', type=str, default='model_round70.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 
 # ---------- fedicon configuration --------

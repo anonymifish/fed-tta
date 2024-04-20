@@ -1,3 +1,4 @@
+import copy
 import logging
 
 import numpy as np
@@ -141,4 +142,7 @@ def load_domains(configs):
             train_datasets.append(domain_datasets[dataset_name])
         return train_datasets, num_client, num_class, data_size, data_shape
     else:
-        return domain_datasets[f'{configs.leave_one_out}'], num_client, num_class, data_size, data_shape
+        test_datasets = []
+        for cid in range(len(dataset_names) - 1):
+            test_datasets.append(copy.deepcopy(domain_datasets[configs.leave_one_out]))
+        return test_datasets, num_client, num_class, data_size, data_shape

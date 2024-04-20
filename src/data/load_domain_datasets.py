@@ -109,7 +109,6 @@ class PACSDataset(Dataset):
         img, target = self.dataset[index]
 
         img = self._image_transformer(img)
-        target = torch.nn.functional.one_hot(torch.tensor(target), num_classes=self.num_class)
 
         return img, target
 
@@ -137,7 +136,6 @@ class Office10Dataset(Dataset):
         img, target = self.dataset[index]
 
         img = self._image_transformer(img)
-        target = torch.nn.functional.one_hot(torch.tensor(target), num_classes=self.num_class)
 
         return img, target
 
