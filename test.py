@@ -38,23 +38,15 @@ def test_cifar(configs):
     checkpoint_path = os.path.join(configs.checkpoint_path, configs.model_name)
     checkpoint = torch.load(checkpoint_path)
 
-    server.load_checkpoint(checkpoint)
-    logger.info("test no-shift dataset...")
-    for cid, client in enumerate(server.clients):
-        client.set_test_set(no_shift[cid], configs.test_batch_size)
-    plain_no_shift_accuracy = server.plain_test()
-    logger.info(f"plain-test no-shift dataset accuracy: {plain_no_shift_accuracy}")
-    no_shift_accuracy = server.test()
-    logger.info(f"test no-shift dataset accuracy: {no_shift_accuracy}")
-
-    server.load_checkpoint(checkpoint)
-    logger.info("test label-shift dataset...")
-    for cid, client in enumerate(server.clients):
-        client.set_test_set(label_shift[cid], configs.test_batch_size)
-    plain_label_shift_accuracy = server.plain_test()
-    logger.info(f"plain-test label-shift dataset accuracy: {plain_label_shift_accuracy}")
-    label_shift_accuracy = server.test()
-    logger.info(f"test label-shift dataset accuracy: {label_shift_accuracy}")
+    for name, dataset in zip(['no-shift', 'label_shift'], [no_shift, label_shift]):
+        server.load_checkpoint(checkpoint)
+        logger.info(f"test {name} dataset...")
+        for cid, client in enumerate(server.clients):
+            client.set_test_set(dataset[cid], configs.test_batch_size)
+        plain_shift_accuracy = server.plain_test()
+        logger.info(f"plain-test {name} dataset accuracy: {plain_shift_accuracy}")
+        shift_accuracy = server.test()
+        logger.info(f"test {name} dataset accuracy: {shift_accuracy}")
 
     for name, dataset in zip(['covariate-shift', 'hybrid-shift'], [covariate_shift, hybrid_shift]):
         logger.info(f"test {name} dataset...")

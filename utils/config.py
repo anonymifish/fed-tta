@@ -6,7 +6,7 @@ parser.add_argument('--debug', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
-parser.add_argument('--method', type=str, default='fedavg')
+parser.add_argument('--method', type=str, default='fedthe')
 parser.add_argument('--backbone', type=str, default='resnet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
 parser.add_argument('--task_name', type=str, default='default_setting')
 parser.add_argument('--step', type=str, default='train')
