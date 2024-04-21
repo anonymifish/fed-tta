@@ -34,8 +34,7 @@ def make_save_path(configs):
     return save_path
 
 
-def prepare_server_and_clients(backbone, configs):
-    device = torch.device(configs.device)
+def prepare_server_and_clients(configs):
     if configs.method == 'fedavg':
         return FedAvgServer, FedAvgClient
     elif configs.method == 'fedicon':

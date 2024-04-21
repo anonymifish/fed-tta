@@ -29,7 +29,7 @@ def test_cifar(configs):
         raise ValueError("backbone unavailable")
 
     logger.info("prepare server and clients...")
-    server_object, client_object = prepare_server_and_clients(backbone, configs)
+    server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)
     server = server_object(device, backbone, configs)
     clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
@@ -93,7 +93,7 @@ def test_domain(configs):
         raise ValueError("backbone unavailable")
 
     logger.info("prepare server and clients...")
-    server_object, client_object = prepare_server_and_clients(backbone, configs)
+    server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)
     server = server_object(device, backbone, configs)
     clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]

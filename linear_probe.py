@@ -144,6 +144,8 @@ def linear_probing():
         acc = train_linear_and_test(backbone, device, linear_probe_set, configs.epochs)
         logger.info(f"linear probe on domain {configs.leave_one_out} accuracy = {acc}")
 
+    logger.info("done")
+
 
 if __name__ == '__main__':
     linear_probing()
