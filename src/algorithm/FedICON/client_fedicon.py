@@ -89,8 +89,8 @@ class FedICONClient(BaseClient):
                 loss.backward()
                 self.icon_optimizer.step()
 
-            self.backbone.cpu()
-            return {'backbone': self.backbone.state_dict()}
+        self.backbone.cpu()
+        return {'backbone': self.backbone.state_dict()}
 
     def finetune(self):
         self.backbone.to(self.device)
@@ -140,6 +140,7 @@ class FedICONClient(BaseClient):
         denormalize = DeNormalize()
         transform = torchvision.transforms.Compose([
             denormalize,
+            # TODO
             transforms.RandomResizedCrop(size=32, scale=(0.2, 1.0), antialias=True),
             transforms.RandomApply([torchvision.transforms.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8),
             transforms.RandomGrayscale(p=0.2),
