@@ -39,6 +39,7 @@ parser.add_argument('--weight_decay', type=float, default=5e-4)
 parser.add_argument('--model_name', type=str, default='model_round120.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 parser.add_argument('--finetune_model_name', type=str, default='finetune_model.pt')
+parser.add_argument('--finetune_epochs', type=int, default=20)
 
 
 def fedavg_test_cifar(configs, server, checkpoint):
