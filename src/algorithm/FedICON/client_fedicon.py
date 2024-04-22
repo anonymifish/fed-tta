@@ -94,7 +94,7 @@ class FedICONClient(BaseClient):
 
     def finetune(self):
         self.backbone.to(self.device)
-        self.backbone.train()
+        self.backbone.eval()
 
         for param in self.backbone.parameters():
             param.requires_grad = False
@@ -202,6 +202,8 @@ class FedICONClient(BaseClient):
         accuracy = []
 
         for x1, x2, y in self.test_dataloader:
+            if x1.shape[0] == 1:
+                continue
             self.backbone.train()
             x1, x2, y = x1.to(self.device), x2.to(self.device), y.to(self.device)
             z1 = self.backbone.intermediate_forward(x1)

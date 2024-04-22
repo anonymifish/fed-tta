@@ -17,12 +17,12 @@ from utils.utils import set_seed, make_save_path
 
 parser = argparse.ArgumentParser(description='arguments for linear probing')
 parser.add_argument('--seed', type=int, default=42)
-parser.add_argument('--method', type=str, default='fedthe')
+parser.add_argument('--method', type=str, default='fedavg')
 parser.add_argument('--backbone', type=str, default='resnet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
 parser.add_argument('--task_name', type=str, default='default_setting')
 parser.add_argument('--step', type=str, default='test')
 parser.add_argument('--dataset', type=str, default='PACS')
-parser.add_argument('--leave_one_out', type=str, default='sketch')
+parser.add_argument('--leave_one_out', type=str, default='cartoon')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
 parser.add_argument('--alpha', type=float, default=0.1, help='parameter of dirichlet distribution')
 parser.add_argument('--dataset_path', type=str, default='/home/yfy/datasets/', help='path to dataset')
@@ -57,7 +57,7 @@ def train_linear_and_test(backbone, device, dataset, epochs):
     classifier.to(device)
     classifier.train()
     for _ in tqdm(range(epochs), desc=f'train linear'):
-        for feature, label in TensorLoader((train_feature, train_label), 128, shuffle=True):
+        for feature, label in TensorLoader((train_feature, train_label), batch_size=128, shuffle=True):
             feature, label = feature.to(device), label.to(device)
             logit = classifier(feature)
             loss = torch.nn.functional.cross_entropy(logit, label)
@@ -66,7 +66,7 @@ def train_linear_and_test(backbone, device, dataset, epochs):
             optimizer.step()
     classifier.eval()
     test_pred = torch.concat([
-        classifier(feature.to(device)).argmax(dim=1).cpu() for feature in TensorLoader(test_feature, 128)
+        classifier(feature.to(device)).argmax(dim=1).cpu() for feature in TensorLoader(test_feature, batch_size=128)
     ])
     acc = accuracy_score(test_label, test_pred)
     return acc
@@ -90,7 +90,6 @@ def linear_probing():
 
     logger.info("prepare dataset...")
     corrupt_list = ['glass_blur', 'motion_blur', 'contrast', 'impulse_noise', 'gaussian_blur']
-    logger.info("prepare dataset...")
     if configs.dataset in ['cifar10', 'cifar100']:
         no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
         data_size = 32
@@ -134,10 +133,10 @@ def linear_probing():
             for cor_type in corrupt_list:
                 logger.info(f"linear probe on {name}, {cor_type} shift dataset...")
                 acc_list = []
-                weights = [len(_) for _ in dataset]
-                for cid in range(len(dataset)):
+                weights = [len(_) for _ in dataset[cor_type][4]]
+                for cid in range(len(dataset[cor_type][4])):
                     acc_list.append(train_linear_and_test(backbone, device, dataset[cor_type][4][cid], configs.epochs))
-                acc = sum([acc_list[i] * weights[i] / sum(weights) for i in range(len(dataset))])
+                acc = sum([acc_list[i] * weights[i] / sum(weights) for i in range(len(dataset[cor_type][4]))])
                 logger.info(f"linear probe on {name}, {cor_type} shift, severity = 4 dataset accuracy = {acc}")
     else:
         linear_probe_set = test_datasets[0]

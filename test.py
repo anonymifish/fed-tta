@@ -109,7 +109,7 @@ def test_domain(configs):
     plain_accuracy = server.plain_test()
     logger.info(f"plain-test domain {configs.leave_one_out} accuracy: {plain_accuracy}")
     accuracy = server.test()
-    logger.info(f"test no-shift dataset accuracy: {accuracy}")
+    logger.info(f"test domain {configs.leave_one_out} accuracy: {accuracy}")
 
 
 def test():

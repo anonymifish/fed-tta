@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class LeNet28(torch.nn.Module):
     def __init__(self):
         super(LeNet28, self).__init__()
-        self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2)
+        self.conv1 = torch.nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5, stride=1, padding=2)
         self.pool1 = torch.nn.MaxPool2d(kernel_size=2)
         self.conv2 = torch.nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1)
         self.pool2 = torch.nn.MaxPool2d(kernel_size=2)
