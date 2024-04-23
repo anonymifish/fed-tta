@@ -3,6 +3,7 @@ import logging
 import os
 
 import torch
+from tqdm import tqdm
 
 from src.algorithm.FedAvg.client_fedavg import FedAvgClient
 from src.algorithm.FedAvg.server_fedavg import FedAvgServer
@@ -14,12 +15,13 @@ from utils.logger import logger
 from utils.utils import make_save_path, set_seed
 
 parser = argparse.ArgumentParser(description='arguments for linear probing')
+parser.add_argument('--debug', type=bool, default=True)
 parser.add_argument('--seed', type=int, default=42)
-parser.add_argument('--method', type=str, default='method')
-parser.add_argument('--backbone', type=str, default='resnet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='debug_add_loss_0.3')
+parser.add_argument('--method', type=str, default='fedicon')
+parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
+parser.add_argument('--task_name', type=str, default='default_setting')
 parser.add_argument('--step', type=str, default='train')
-parser.add_argument('--dataset', type=str, default='PACS')
+parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='sketch')
 parser.add_argument('--num_client', type=int, default=10, help='number of clients')
 parser.add_argument('--alpha', type=float, default=0.1, help='parameter of dirichlet distribution')
@@ -36,10 +38,10 @@ parser.add_argument('--batch_size', type=int, default=32, help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
-parser.add_argument('--model_name', type=str, default='model_round120.pt')
+parser.add_argument('--model_name', type=str, default='model_round100.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
-parser.add_argument('--finetune_model_name', type=str, default='finetune_model.pt')
-parser.add_argument('--finetune_epochs', type=int, default=20)
+parser.add_argument('--finetune_model_name', type=str, default='finetune_model_200.pt')
+parser.add_argument('--finetune_epochs', type=int, default=200)
 
 
 def fedavg_test_cifar(configs, server, checkpoint):
@@ -121,6 +123,7 @@ def finetune(configs, server):
         raise ValueError("method unavailable")
 
     for client in server.clients:
+        logger.info(f"finetune client {client.cid}...")
         client.backbone.to(client.device)
         client.backbone.eval()
 
@@ -131,8 +134,8 @@ def finetune(configs, server):
             weight_decay=client.weight_decay,
         )
 
-        for _ in range(configs.finetune_epochs):
-            for data, target in client.train_loader:
+        for _ in tqdm(range(configs.finetune_epochs), desc="finetune"):
+            for data, target in client.train_dataloader:
                 data, target = data.to(client.device), target.to(client.device)
                 logit = client.backbone(data)
                 loss = torch.nn.functional.cross_entropy(logit, target)
