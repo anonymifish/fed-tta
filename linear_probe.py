@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='arguments for linear probing')
 parser.add_argument('--seed', type=int, default=42)
 parser.add_argument('--method', type=str, default='fedicon')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='default_setting')
+parser.add_argument('--task_name', type=str, default='1epoch_flip_1x20')
 parser.add_argument('--step', type=str, default='test')
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='cartoon')
@@ -32,7 +32,7 @@ parser.add_argument('--new_dataset_seed', type=int, default=30, help='seed to sp
 parser.add_argument('--device', type=str, default='cuda:0', help='device')
 parser.add_argument('--checkpoint_path', type=str, default='default', help='check point path')
 parser.add_argument('--epochs', type=int, default=200, help='linear probe epochs')
-parser.add_argument('--model_name', type=str, default='model_round100.pt')
+parser.add_argument('--model_name', type=str, default='model_round50.pt')
 
 
 def train_linear_and_test(backbone, device, dataset, epochs):

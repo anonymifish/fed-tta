@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 
+from src.model.grad_batchnorm import GradBatchNorm2d, GradBatchNorm1d
+
 
 class SimpleCNN28(torch.nn.Module):
     def __init__(self):
@@ -132,6 +134,22 @@ class ShallowCNN(torch.nn.Module):
         x = self.relu4(x)
 
         return x
+
+    def change_bn(self):
+        self.bn1 = GradBatchNorm2d(self.bn1)
+        self.bn2 = GradBatchNorm2d(self.bn2)
+        self.bn3 = GradBatchNorm2d(self.bn3)
+        self.bn4 = GradBatchNorm1d(self.bn4)
+
+    def set_running_stat_grads(self):
+        for m in self.modules():
+            if isinstance(m, GradBatchNorm2d) or isinstance(m, GradBatchNorm1d):
+                m.set_running_stat_grad()
+
+    def clip_bn_running_vars(self):
+        for m in self.modules():
+            if isinstance(m, GradBatchNorm2d) or isinstance(m, GradBatchNorm1d):
+                m.clip_bn_running_var()
 
 
 def cnn(description, shape, n_classes):

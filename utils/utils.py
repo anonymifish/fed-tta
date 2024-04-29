@@ -4,6 +4,8 @@ import random
 import numpy as np
 import torch
 
+from src.algorithm.ATP.client_atp import ATPClient
+from src.algorithm.ATP.server_atp import ATPServer
 from src.algorithm.FedAvg.client_fedavg import FedAvgClient
 from src.algorithm.FedAvg.server_fedavg import FedAvgServer
 from src.algorithm.FedICON.client_fedicon import FedICONClient
@@ -42,7 +44,7 @@ def prepare_server_and_clients(configs):
     elif configs.method == 'fedthe':
         return FedTHEServer, FedTHEClient
     elif configs.method == 'atp':
-        raise NotImplementedError
+        return ATPServer, ATPClient
     elif configs.method == 'method':
         return MethodServer, MethodClient
     else:

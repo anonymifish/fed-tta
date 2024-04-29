@@ -24,13 +24,6 @@ class FedICONClient(BaseClient):
             lr=self.learning_rate,
         )
 
-        self.avg_optimizer = torch.optim.SGD(
-            params=self.backbone.parameters(),
-            lr=self.learning_rate,
-            momentum=self.momentum,
-            weight_decay=self.weight_decay,
-        )
-
         self.icon_optimizer = torch.optim.SGD(
             params=self.backbone.parameters(),
             lr=self.icon_learning_rate,
@@ -38,30 +31,10 @@ class FedICONClient(BaseClient):
             weight_decay=self.weight_decay,
         )
 
-    def fedavg_train(self):
-        self.backbone.to(self.device)
-        self.backbone.train()
-        accuracy = []
-
-        for epoch in range(self.epochs):
-            for data, target in self.original_dataloader:
-                data, target = data.to(self.device), target.to(self.device)
-                logits = self.backbone(data)
-
-                pred = logits.data.max(1)[1]
-                accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
-
-                self.avg_optimizer.zero_grad()
-                loss = F.cross_entropy(logits, target)
-                loss.backward()
-                self.avg_optimizer.step()
-
-        self.backbone.cpu()
-        return {'backbone': self.backbone.state_dict(), 'accuracy': sum(accuracy) / len(accuracy)}
-
     def train(self):
         self.backbone.to(self.device)
         self.backbone.train()
+        loss_sum = 0
 
         for epoch in range(self.epochs):
             for x1, x2, y in self.train_dataloader:
@@ -84,13 +57,14 @@ class FedICONClient(BaseClient):
 
                 positive = numerator.sum(dim=1)
                 loss = -torch.log(positive / denominator).mean()
+                loss_sum += loss.data.cpu()
 
                 self.icon_optimizer.zero_grad()
                 loss.backward()
                 self.icon_optimizer.step()
 
         self.backbone.cpu()
-        return {'backbone': self.backbone.state_dict()}
+        return {'backbone': self.backbone.state_dict(), 'epoch_loss': loss_sum / self.epochs}
 
     def finetune(self):
         self.backbone.to(self.device)
@@ -140,7 +114,6 @@ class FedICONClient(BaseClient):
         denormalize = DeNormalize()
         transform = torchvision.transforms.Compose([
             denormalize,
-            # TODO
             transforms.RandomResizedCrop(size=32, scale=(0.2, 1.0), antialias=True),
             transforms.RandomApply([torchvision.transforms.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8),
             transforms.RandomGrayscale(p=0.2),

@@ -68,6 +68,11 @@ def run():
     else:
         raise ValueError("backbone unavailable")
 
+    if configs.method == 'atp':
+        checkpoint_path = os.path.join(configs.checkpoint_path, configs.load_model_name)
+        checkpoint = torch.load(checkpoint_path)
+        backbone.load_state_dict(checkpoint)
+
     logger.info("prepare server and clients...")
     server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)

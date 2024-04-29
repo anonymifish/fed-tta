@@ -3,6 +3,8 @@ from typing import Any, Optional, Callable, List
 import torch
 from torch import nn, Tensor
 
+from src.model.grad_batchnorm import GradBatchNorm2d
+
 
 def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
     """1x1 convolution"""
@@ -226,6 +228,42 @@ class ResNet(nn.Module):
         x = torch.flatten(x, 1)
 
         return x
+
+    def change_bn(self):
+        self.bn1 = GradBatchNorm2d(self.bn1)
+
+        self.layer1[0].bn1 = GradBatchNorm2d(self.layer1[0].bn1)
+        self.layer1[0].bn2 = GradBatchNorm2d(self.layer1[0].bn2)
+        self.layer1[1].bn1 = GradBatchNorm2d(self.layer1[1].bn1)
+        self.layer1[1].bn2 = GradBatchNorm2d(self.layer1[1].bn2)
+
+        self.layer2[0].bn1 = GradBatchNorm2d(self.layer2[0].bn1)
+        self.layer2[0].bn2 = GradBatchNorm2d(self.layer2[0].bn2)
+        self.layer2[0].downsample[1] = GradBatchNorm2d(self.layer2[0].downsample[1])
+        self.layer2[1].bn1 = GradBatchNorm2d(self.layer2[1].bn1)
+        self.layer2[1].bn2 = GradBatchNorm2d(self.layer2[1].bn2)
+
+        self.layer3[0].bn1 = GradBatchNorm2d(self.layer3[0].bn1)
+        self.layer3[0].bn2 = GradBatchNorm2d(self.layer3[0].bn2)
+        self.layer3[0].downsample[1] = GradBatchNorm2d(self.layer3[0].downsample[1])
+        self.layer3[1].bn1 = GradBatchNorm2d(self.layer3[1].bn1)
+        self.layer3[1].bn2 = GradBatchNorm2d(self.layer3[1].bn2)
+
+        self.layer4[0].bn1 = GradBatchNorm2d(self.layer4[0].bn1)
+        self.layer4[0].bn2 = GradBatchNorm2d(self.layer4[0].bn2)
+        self.layer4[0].downsample[1] = GradBatchNorm2d(self.layer4[0].downsample[1])
+        self.layer4[1].bn1 = GradBatchNorm2d(self.layer4[1].bn1)
+        self.layer4[1].bn2 = GradBatchNorm2d(self.layer4[1].bn2)
+
+    def set_running_stat_grads(self):
+        for m in self.modules():
+            if isinstance(m, GradBatchNorm2d):
+                m.set_running_stat_grad()
+
+    def clip_bn_running_vars(self):
+        for m in self.modules():
+            if isinstance(m, GradBatchNorm2d):
+                m.clip_bn_running_var()
 
 
 def resnet18(**kwargs: Any) -> ResNet:
