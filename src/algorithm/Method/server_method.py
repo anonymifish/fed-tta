@@ -11,8 +11,8 @@ from utils.logger import logger
 
 
 class MethodServer(BaseServer):
-    def __init__(self, device, backbone, configs):
-        super().__init__(device, backbone, configs)
+    def __init__(self, device, backbone, configs, profiler):
+        super().__init__(device, backbone, configs, profiler)
         self.avg_head = configs.avg_head
         self.aux_ratio = configs.aux_ratio
 

@@ -10,11 +10,12 @@ from utils.logger import logger
 
 
 class FedAvgServer(BaseServer):
-    def __init__(self, device, backbone, configs):
-        super().__init__(device, backbone, configs)
+    def __init__(self, device, backbone, configs, profiler):
+        super().__init__(device, backbone, configs, profiler)
 
     def fit(self):
         for r in range(self.global_rounds):
+            self.profiler.step()
             client_weights = []
             client_net_states = []
             client_accuracy = []

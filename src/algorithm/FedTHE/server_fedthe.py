@@ -10,8 +10,8 @@ from utils.logger import logger
 
 
 class FedTHEServer(BaseServer):
-    def __init__(self, device, backbone, configs):
-        super(FedTHEServer, self).__init__(device, backbone, configs)
+    def __init__(self, device, backbone, configs, profiler):
+        super(FedTHEServer, self).__init__(device, backbone, configs, profiler)
         self.global_representation = torch.zeros(self.backbone.fc.in_features)
 
     def fit(self):

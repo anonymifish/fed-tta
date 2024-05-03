@@ -11,8 +11,8 @@ from utils.logger import logger
 
 
 class ATPServer(BaseServer):
-    def __init__(self, device, backbone, configs):
-        super().__init__(device, backbone, configs)
+    def __init__(self, device, backbone, configs, profiler):
+        super().__init__(device, backbone, configs, profiler)
         self.backbone.change_bn()
         self.backbone.eval()
 

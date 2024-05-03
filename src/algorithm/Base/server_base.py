@@ -5,7 +5,7 @@ import torch
 
 
 class BaseServer:
-    def __init__(self, device, backbone, configs):
+    def __init__(self, device, backbone, configs, profiler):
         self.clients = []
         self.join_raio = configs.join_ratio
         self.global_rounds = configs.global_rounds
@@ -13,6 +13,7 @@ class BaseServer:
         self.backbone = copy.deepcopy(backbone)
         self.device = device
         self.debug = configs.debug
+        self.profiler = profiler
 
     def select_clients(self):
         if self.join_raio == 1.0:

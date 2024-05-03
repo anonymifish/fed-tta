@@ -11,8 +11,8 @@ from utils.logger import logger
 
 
 class FedICONServer(BaseServer):
-    def __init__(self, device, backbone, configs):
-        super(FedICONServer, self).__init__(device, backbone, configs)
+    def __init__(self, device, backbone, configs, profiler):
+        super(FedICONServer, self).__init__(device, backbone, configs, profiler)
         self.icon_rounds = configs.icon_rounds
         self.finetune_method = configs.finetune_method
         self.finetune_rounds = configs.finetune_rounds

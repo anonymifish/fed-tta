@@ -3,6 +3,7 @@ import os
 
 import torch
 import wandb
+from torch.profiler import profile, tensorboard_trace_handler, schedule, ProfilerActivity
 
 from src.data.data_partition import load_cifar, load_domains
 from src.model.cnn import cnn
@@ -33,6 +34,16 @@ def run():
         setattr(configs, "checkpoint_path", save_path)
     if not configs.debug:
         wandb.config.update(configs, allow_val_change=True)
+
+    profiler = profile(
+        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+        schedule=schedule(wait=0, warmup=0, active=1, repeat=configs.global_rounds),
+        on_trace_ready=tensorboard_trace_handler(os.path.join(save_path, 'profiler')),
+        record_shapes=True,
+        profile_memory=True,
+        with_stack=True
+    )
+    profiler.start()
 
     file_handler = logging.FileHandler(os.path.join(save_path, 'logfile.log'))
     file_handler.setLevel(logging.INFO)
@@ -76,7 +87,7 @@ def run():
     logger.info("prepare server and clients...")
     server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)
-    server = server_object(device, backbone, configs)
+    server = server_object(device, backbone, configs, profiler)
     clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
     for cid, client in enumerate(clients):
         client.set_train_set(train_datasets[cid])
@@ -86,10 +97,11 @@ def run():
 
     logger.info("done")
 
+    profiler.stop()
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
-
     if args.debug:
         run()
     else:
