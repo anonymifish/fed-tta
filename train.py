@@ -35,15 +35,17 @@ def run():
     if not configs.debug:
         wandb.config.update(configs, allow_val_change=True)
 
-    profiler = profile(
-        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-        schedule=schedule(wait=0, warmup=0, active=1, repeat=configs.global_rounds),
-        on_trace_ready=tensorboard_trace_handler(os.path.join(save_path, 'profiler')),
-        record_shapes=True,
-        profile_memory=True,
-        with_stack=True
-    )
-    profiler.start()
+    profiler = None
+    if configs.use_profile:
+        profiler = profile(
+            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+            schedule=schedule(wait=0, warmup=0, active=1, repeat=configs.global_rounds),
+            on_trace_ready=tensorboard_trace_handler(os.path.join(save_path, 'profiler')),
+            record_shapes=True,
+            profile_memory=True,
+            with_stack=True
+        )
+        profiler.start()
 
     file_handler = logging.FileHandler(os.path.join(save_path, 'logfile.log'))
     file_handler.setLevel(logging.INFO)
@@ -97,7 +99,8 @@ def run():
 
     logger.info("done")
 
-    profiler.stop()
+    if configs.use_profile:
+        profiler.stop()
 
 
 if __name__ == "__main__":

@@ -15,7 +15,8 @@ class FedAvgServer(BaseServer):
 
     def fit(self):
         for r in range(self.global_rounds):
-            self.profiler.step()
+            if self.use_profile:
+                self.profiler.step()
             client_weights = []
             client_net_states = []
             client_accuracy = []

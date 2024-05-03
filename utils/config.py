@@ -3,6 +3,7 @@ import argparse
 parser = argparse.ArgumentParser(description='arguments for training and testing')
 
 parser.add_argument('--debug', type=bool, default=False)
+parser.add_argument('--use_profile', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 

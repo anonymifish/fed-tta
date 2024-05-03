@@ -14,6 +14,7 @@ class BaseServer:
         self.device = device
         self.debug = configs.debug
         self.profiler = profiler
+        self.use_profile = configs.use_profile
 
     def select_clients(self):
         if self.join_raio == 1.0:
