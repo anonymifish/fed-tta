@@ -31,7 +31,7 @@ def test_cifar(configs):
     logger.info("prepare server and clients...")
     server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)
-    server = server_object(device, backbone, configs)
+    server = server_object(device, backbone, configs, None)
     clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
     server.clients.extend(clients)
 

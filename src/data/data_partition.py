@@ -1,5 +1,4 @@
 import copy
-import logging
 
 import numpy as np
 from torch.utils.data import Subset
@@ -8,6 +7,7 @@ from torchvision.transforms import transforms
 
 from src.data.load_cifar_corrupted import Cifar10corrupted, Cifar100corrupted
 from src.data.load_domain_datasets import Digit5Dataset, PACSDataset, Office10Dataset
+from utils.logger import logger
 
 
 def create_dirichlet_distribution(alpha: float, num_client: int, num_class: int, seed: int):
@@ -55,8 +55,8 @@ def load_cifar(configs, corrupt_list=None):
         train_split = split_by_distribution(np.array(train_data.targets), distribution)
         train_datasets = [Subset(train_data, train_split[idx]) for idx in range(configs.num_client)]
 
-        logging.info(f'------ dirichlet distribution with alpha = {configs.alpha}, {configs.num_client} clients ------')
-        logging.info(f'train datasets: {[len(dataset) for dataset in train_datasets]}')
+        logger.info(f'------ dirichlet distribution with alpha = {configs.alpha}, {configs.num_client} clients ------')
+        logger.info(f'train datasets: {[len(dataset) for dataset in train_datasets]}')
         return train_datasets, num_class
     else:
         if configs.dataset == 'cifar10':

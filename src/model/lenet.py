@@ -34,6 +34,18 @@ class LeNet28(torch.nn.Module):
         out = F.relu(self.fc2(out))
         return out
 
+    def change_bn(self):
+        pass
+
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
+    def set_running_stat_grads(self):
+        pass
+
+    def clip_bn_running_vars(self):
+        pass
+
 
 class LeNet(torch.nn.Module):
     def __init__(self, n_classes=10):
@@ -66,6 +78,18 @@ class LeNet(torch.nn.Module):
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
         return out
+
+    def change_bn(self):
+        pass
+
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
+    def set_running_stat_grads(self):
+        pass
+
+    def clip_bn_running_vars(self):
+        pass
 
 
 def lenet(size, n_classes):

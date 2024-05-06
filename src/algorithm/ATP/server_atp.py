@@ -32,7 +32,6 @@ class ATPServer(BaseServer):
             logger.info(f'round{r}')
             for client in active_clients:
                 client: ATPClient
-                client.backbone.load_state_dict(self.backbone.state_dict())
                 client.adapt_lrs = copy.deepcopy(self.adapt_lrs)
                 client_weights.append(len(client.train_dataloader))
                 start_time = time.time()

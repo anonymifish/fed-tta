@@ -1,3 +1,5 @@
+import copy
+
 import torch
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
@@ -21,7 +23,7 @@ class ATPClient(BaseClient):
         self.backbone.to(self.device)
         accuracy = []
 
-        state = self.backbone.state_dict()
+        state = copy.deepcopy(self.backbone.state_dict())
         for data, target in self.train_dataloader:
             self.backbone.load_state_dict(state)
             data, target = data.to(self.device), target.to(self.device)
@@ -33,14 +35,14 @@ class ATPClient(BaseClient):
             self.backbone.set_running_stat_grads()
             unsupervised_grad = [p.grad.clone() for p in self.backbone.trainable_parameters()]
             with torch.no_grad():
-                for i, (param, grad) in enumerate(zip(self.backbone.trainable_parameters, unsupervised_grad)):
+                for i, (param, grad) in enumerate(zip(self.backbone.trainable_parameters(), unsupervised_grad)):
                     param -= self.adapt_lrs[i] * grad
             self.backbone.zero_grad()
             self.backbone.clip_bn_running_vars()
 
             logits = self.backbone(data)
             loss = F.cross_entropy(logits, target)
-            supervised_grad = torch.autograd.grad(loss, self.backbone.trainable_parameters)
+            supervised_grad = torch.autograd.grad(loss, self.backbone.trainable_parameters())
             with torch.no_grad():
                 g = torch.zeros_like(self.adapt_lrs)
                 l = torch.zeros_like(self.adapt_lrs)
@@ -76,7 +78,7 @@ class ATPClient(BaseClient):
         self.backbone.eval()
         accuracy = []
 
-        state = self.backbone.state_dict()
+        state = copy.deepcopy(self.backbone.state_dict())
         for data, target in self.test_dataloader:
             self.backbone.load_state_dict(state)
             data, target = data.to(self.device), target.to(self.device)
@@ -88,7 +90,7 @@ class ATPClient(BaseClient):
             self.backbone.set_running_stat_grads()
             unsupervised_grad = [p.grad.clone() for p in self.backbone.trainable_parameters()]
             with torch.no_grad():
-                for i, (param, grad) in enumerate(zip(self.backbone.trainable_parameters, unsupervised_grad)):
+                for i, (param, grad) in enumerate(zip(self.backbone.trainable_parameters(), unsupervised_grad)):
                     param -= self.adapt_lrs[i] * grad
             self.backbone.zero_grad()
             self.backbone.clip_bn_running_vars()

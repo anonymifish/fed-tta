@@ -33,6 +33,18 @@ class SimpleCNN28(torch.nn.Module):
         out = F.relu(self.fc1(out))
         return out
 
+    def change_bn(self):
+        pass
+
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
+    def set_running_stat_grads(self):
+        pass
+
+    def clip_bn_running_vars(self):
+        pass
+
 
 class SimpleCNN(torch.nn.Module):
     def __init__(self, n_classes=10):
@@ -62,6 +74,18 @@ class SimpleCNN(torch.nn.Module):
         out = out.view(-1, 64 * 5 * 5)
         out = F.relu(self.fc1(out))
         return out
+
+    def change_bn(self):
+        pass
+
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
+    def set_running_stat_grads(self):
+        pass
+
+    def clip_bn_running_vars(self):
+        pass
 
 
 class ShallowCNN(torch.nn.Module):
@@ -140,6 +164,9 @@ class ShallowCNN(torch.nn.Module):
         self.bn2 = GradBatchNorm2d(self.bn2)
         self.bn3 = GradBatchNorm2d(self.bn3)
         self.bn4 = GradBatchNorm1d(self.bn4)
+
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
 
     def set_running_stat_grads(self):
         for m in self.modules():

@@ -255,6 +255,9 @@ class ResNet(nn.Module):
         self.layer4[1].bn1 = GradBatchNorm2d(self.layer4[1].bn1)
         self.layer4[1].bn2 = GradBatchNorm2d(self.layer4[1].bn2)
 
+    def trainable_parameters(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
     def set_running_stat_grads(self):
         for m in self.modules():
             if isinstance(m, GradBatchNorm2d):
