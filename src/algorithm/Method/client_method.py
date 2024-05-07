@@ -50,12 +50,12 @@ class MethodClient(BaseClient):
                 data, target = data.to(self.device), target.to(self.device)
                 z = self.backbone.intermediate_forward(data)
 
-                if self.try_method in ['feature-aux_classifier', 'all_training']:
+                if self.try_method in ['feature_aux-classifier', 'all_training']:
                     optimizer = self.all_optimizer
                 else:
                     optimizer = self.optimizer
 
-                if self.try_method in ['feature-aux_classifier', 'feature_classifier']:
+                if self.try_method in ['feature_aux-classifier', 'feature-classifier']:
                     aux_logits = self.auxiliary_head(z)
                     aux_loss = F.cross_entropy(aux_logits, target)
                     optimizer.zero_grad()
@@ -79,7 +79,7 @@ class MethodClient(BaseClient):
                 else:
                     raise ValueError(f'illegal try method {self.try_method}')
 
-        if self.try_method in ['feature-aux_classifier', 'feature_classifier']:
+        if self.try_method in ['feature_aux-classifier', 'feature-classifier']:
             for data, target in self.train_dataloader:
                 data, target = data.to(self.device), target.to(self.device)
                 logits = self.backbone(data)
@@ -111,7 +111,13 @@ class MethodClient(BaseClient):
         return {'acc': sum(accuracy) / len(accuracy)}
 
     def test(self):
-        pass
+        self.backbone.to(self.device)
+        self.backbone.eval()
+        accuracy = []
+
+
+        self.backbone.cpu()
+        return {'acc': sum(accuracy) / len(accuracy)}
 
     def make_checkpoint(self):
         return {'fc': self.backbone.fc.state_dict()}

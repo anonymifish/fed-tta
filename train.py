@@ -62,9 +62,13 @@ def run():
         train_datasets, num_class = load_cifar(configs)
         data_size = 32
         data_shape = [3, 32, 32]
+        setattr(configs, "num_class", num_class)
+        logger.info(f"update configuration num_class: {num_class}")
     elif configs.dataset in ['digit-5', 'PACS', 'office-10', 'domain-net']:
         train_datasets, num_client, num_class, data_size, data_shape = load_domains(configs)
         setattr(configs, "num_client", num_client)
+        setattr(configs, "num_class", num_class)
+        logger.info(f"update configuration num_class: {num_class}")
         logger.info(f"update configuration num_client: {num_client}")
         if not configs.debug:
             wandb.config.update(configs, allow_val_change=True)

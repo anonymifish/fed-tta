@@ -8,6 +8,8 @@ from src.algorithm.ATP.client_atp import ATPClient
 from src.algorithm.ATP.server_atp import ATPServer
 from src.algorithm.FedAvg.client_fedavg import FedAvgClient
 from src.algorithm.FedAvg.server_fedavg import FedAvgServer
+from src.algorithm.FedCal.client_fedcal import FedCalClient
+from src.algorithm.FedCal.server_fedcal import FedCalServer
 from src.algorithm.FedICON.client_fedicon import FedICONClient
 from src.algorithm.FedICON.server_fedicon import FedICONServer
 from src.algorithm.FedTHE.client_fedthe import FedTHEClient
@@ -45,6 +47,8 @@ def prepare_server_and_clients(configs):
         return FedTHEServer, FedTHEClient
     elif configs.method == 'atp':
         return ATPServer, ATPClient
+    elif configs.method == 'fedcal':
+        return FedCalServer, FedCalClient
     elif configs.method == 'method':
         return MethodServer, MethodClient
     else:

@@ -2,15 +2,15 @@ import argparse
 
 parser = argparse.ArgumentParser(description='arguments for training and testing')
 
-parser.add_argument('--debug', type=bool, default=False)
+parser.add_argument('--debug', type=bool, default=True)
 parser.add_argument('--use_profile', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
 parser.add_argument('--method', type=str, default='method')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='all_training_ar0.3')
-parser.add_argument('--step', type=str, default='train')
+parser.add_argument('--task_name', type=str, default='feature-classifier-ar0.7')
+parser.add_argument('--step', type=str, default='test')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='sketch')
@@ -21,10 +21,10 @@ parser.add_argument('--num_class', type=int, default=10, help='number of dataset
 parser.add_argument('--dataset_seed', type=int, default=21, help='seed to split dataset')
 parser.add_argument('--new_dataset_seed', type=int, default=30, help='seed to split dataset')
 # ---------- device ----------
-parser.add_argument('--device', type=str, default='cuda:0', help='device')
+parser.add_argument('--device', type=str, default='cuda:1', help='device')
 # ---------- server configuration ----------
 parser.add_argument('--join_ratio', type=float, default=1.0, help='join ratio')
-parser.add_argument('--global_rounds', type=int, default=50, help='total communication round')
+parser.add_argument('--global_rounds', type=int, default=100, help='total communication round')
 parser.add_argument('--checkpoint_path', type=str, default='default', help='check point path')
 # ---------- client configuration ----------
 parser.add_argument('--epochs', type=int, default=5, help='local epochs')
@@ -34,7 +34,7 @@ parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
 # ---------- test --------
-parser.add_argument('--model_name', type=str, default='atp_model_round50.pt')
+parser.add_argument('--model_name', type=str, default='model_round100.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 
 # ---------- fedicon configuration --------
@@ -54,11 +54,11 @@ parser.add_argument('--beta', type=float, default=0.3)
 
 # ---------- method configuration --------
 parser.add_argument('--avg_head', type=bool, default=False)
-parser.add_argument('--aux_ratio', type=float, default=0.3)
+parser.add_argument('--aux_ratio', type=float, default=0.7)
 parser.add_argument('--trade_off', type=float, default=0.3)
 parser.add_argument('--add_loss', type=bool, default=True)
 parser.add_argument('--loss_weight', type=float, default=0.3)
-parser.add_argument('--try_method', type=str, default='all_training')
+parser.add_argument('--try_method', type=str, default='feature-classifier')
 
 # ---------- atp configuration --------
 parser.add_argument('--load_model_name', type=str, default='model_round100.pt')
