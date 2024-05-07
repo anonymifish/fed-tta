@@ -67,7 +67,7 @@ class FedCalClient(BaseClient):
         self.backbone.eval()
         accuracy = []
 
-        p_s = torch.ones(self.num_class)
+        p_s = torch.ones(self.num_class).to(self.device)
         p_s = p_s / self.num_class
         p_t = copy.deepcopy(p_s)
 
@@ -75,10 +75,9 @@ class FedCalClient(BaseClient):
             for data, target in self.test_dataloader:
                 data, target = data.to(self.device), target.to(self.device)
                 logits = self.backbone(data)
-                prob = F.softmax(logits)
-                for iter in range(10):
-                    p_con = (prob * p_t / p_s) / (prob * p_t / p_s).sum()
-                    p_t = p_con.sum().mean()
+                prob = F.softmax(logits, dim=-1)
+                for _ in range(3):
+                    p_t = ((prob * p_t / p_s) / (prob * p_t / p_s).sum(dim=1).unsqueeze(1)).mean(dim=0)
                 prob = prob * p_t / p_s
                 pred = prob.data.max(1)[1]
                 accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))

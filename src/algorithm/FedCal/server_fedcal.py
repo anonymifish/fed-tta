@@ -58,7 +58,7 @@ class FedCalServer(BaseServer):
         client_weights = []
         for client in self.clients:
             client_weights.append(len(client.test_dataloader))
-            report = client.test()
+            report = client.plain_test()
             accuracy.append(report['acc'])
 
         return sum([accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(self.clients))])
@@ -68,7 +68,7 @@ class FedCalServer(BaseServer):
         client_weights = []
         for client in self.clients:
             client_weights.append(len(client.test_dataloader))
-            report = client.plain_test()
+            report = client.test()
             accuracy.append(report['acc'])
 
         return sum([accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(self.clients))])

@@ -9,7 +9,7 @@ parser.add_argument('--seed', type=int, default=42)
 
 parser.add_argument('--method', type=str, default='method')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='feature-classifier-ar0.7')
+parser.add_argument('--task_name', type=str, default='feature_aux-classifier-ar0.3')
 parser.add_argument('--step', type=str, default='test')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')

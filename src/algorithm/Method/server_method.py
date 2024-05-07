@@ -81,15 +81,14 @@ class MethodServer(BaseServer):
                 self.make_checkpoint(r + 1)
 
     def test(self):
-        return 1.0
-        # accuracy = []
-        # client_weights = []
-        # for client in self.clients:
-        #     client_weights.append(len(client.test_dataloader))
-        #     report = client.test()
-        #     accuracy.append(report['acc'])
-        #
-        # return sum([accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(self.clients))])
+        accuracy = []
+        client_weights = []
+        for client in self.clients:
+            client_weights.append(len(client.test_dataloader))
+            report = client.test()
+            accuracy.append(report['acc'])
+
+        return sum([accuracy[i] * client_weights[i] / sum(client_weights) for i in range(len(self.clients))])
 
     def plain_test(self):
         accuracy = []

@@ -1,5 +1,6 @@
 import copy
 
+import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import torch.optim
 from sklearn.metrics import accuracy_score
@@ -115,6 +116,43 @@ class MethodClient(BaseClient):
         self.backbone.eval()
         accuracy = []
 
+        # confidence is not good, then what about logits?
+        correct_confidence = []
+        incorrect_confidence = []
+        correct_entropy = []
+        incorrect_entropy = []
+
+        for data, target in self.test_dataloader:
+            data, target = data.to(self.device), target.to(self.device)
+            logits = self.backbone(data)
+            prob = F.softmax(logits, dim=-1)
+            entropy = -torch.sum(prob * torch.log(prob), dim=1)
+            confidence, pred = torch.max(prob, 1)
+            accuracy.append(accuracy_score(list(target.data.cpu().numpy()), list(pred.data.cpu().numpy())))
+            for i in range(len(target)):
+                if pred[i] == target[i]:
+                    correct_entropy.append(entropy[i].item())
+                    correct_confidence.append(confidence[i].item())
+                else:
+                    incorrect_entropy.append(entropy[i].item())
+                    incorrect_confidence.append(confidence[i].item())
+
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.hist(correct_confidence, bins=20, alpha=0.7, label='Correct Predictions')
+        plt.hist(incorrect_confidence, bins=20, alpha=0.7, label='Incorrect Predictions')
+        plt.xlabel('Confidence')
+        plt.ylabel('Count')
+        plt.legend()
+
+        plt.subplot(1, 2, 2)
+        plt.hist(correct_entropy, bins=20, alpha=0.7, label='Correct Predictions')
+        plt.hist(incorrect_entropy, bins=20, alpha=0.7, label='Incorrect Predictions')
+        plt.xlabel('Entropy')
+        plt.ylabel('Count')
+        plt.legend()
+
+        plt.savefig('confidence_entropy_distribution.png')
 
         self.backbone.cpu()
         return {'acc': sum(accuracy) / len(accuracy)}
