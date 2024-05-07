@@ -2,15 +2,15 @@ import argparse
 
 parser = argparse.ArgumentParser(description='arguments for training and testing')
 
-parser.add_argument('--debug', type=bool, default=True)
+parser.add_argument('--debug', type=bool, default=False)
 parser.add_argument('--use_profile', type=bool, default=False)
 parser.add_argument('--wandb_mode', type=str, choices=['disabled', 'online', 'offline'], default='online')
 parser.add_argument('--seed', type=int, default=42)
 
-parser.add_argument('--method', type=str, default='atp')
+parser.add_argument('--method', type=str, default='method')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='debug')
-parser.add_argument('--step', type=str, default='test')
+parser.add_argument('--task_name', type=str, default='all_training_ar0.3')
+parser.add_argument('--step', type=str, default='train')
 # ---------- dataset partition ----------
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='sketch')
@@ -54,10 +54,11 @@ parser.add_argument('--beta', type=float, default=0.3)
 
 # ---------- method configuration --------
 parser.add_argument('--avg_head', type=bool, default=False)
-parser.add_argument('--aux_ratio', type=float, default=0.1)
+parser.add_argument('--aux_ratio', type=float, default=0.3)
 parser.add_argument('--trade_off', type=float, default=0.3)
 parser.add_argument('--add_loss', type=bool, default=True)
 parser.add_argument('--loss_weight', type=float, default=0.3)
+parser.add_argument('--try_method', type=str, default='all_training')
 
 # ---------- atp configuration --------
 parser.add_argument('--load_model_name', type=str, default='model_round100.pt')

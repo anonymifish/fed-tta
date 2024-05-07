@@ -1,4 +1,4 @@
-import logging
+import copy
 import os
 import time
 
@@ -15,23 +15,24 @@ class MethodServer(BaseServer):
         super().__init__(device, backbone, configs, profiler)
         self.avg_head = configs.avg_head
         self.aux_ratio = configs.aux_ratio
+        head_state_dict = self.backbone.fc.state_dict()
+        self.aux_heads = {client.cid: copy.deepcopy(head_state_dict) for client in self.clients}
 
-    def auxiliary_head_select(self, head_states_list):
-        """can not deal with join_ratio != 1.0"""
-        """save every client's head ?"""
+    def auxiliary_head_select(self):
         state_vect = []
-        for head_state in head_states_list:
+        for head_state in self.aux_heads.values():
             state_vect.append(torch.cat([param.view(-1) for param in head_state.values()]))
         state_vect_matrix = torch.stack(state_vect)
 
         distance = torch.norm(state_vect_matrix.unsqueeze(1) - state_vect_matrix.unsqueeze(0), dim=2)
-        max_distance, max_indices = torch.max(distance, dim=1)
-        # max_distance, max_indices = torch.topk(distance, int(len(self.clients) * self.aux_ratio), dim=1)
+        max_distance, max_indices = torch.topk(distance, int(len(self.clients) * self.aux_ratio), dim=1)
 
         ret = []
-        for cid, _ in enumerate(head_states_list):
-            logger.info(f'for client{cid}, client{max_indices[cid]}\'s head has the max distance {max_distance[cid]}')
-            ret.append(head_states_list[max_indices[cid]])
+        for cid, _ in enumerate(self.aux_heads):
+            id_list = max_indices[cid].int().tolist()
+            logger.info(f'for client{cid}, client{id_list}\'s head has the max distance {max_distance[cid]}')
+            aux_head_state = self.model_average([self.aux_heads[i] for i in id_list], [1 for _ in id_list])
+            ret.append(aux_head_state)
         return ret
 
     def fit(self):
@@ -40,7 +41,6 @@ class MethodServer(BaseServer):
             client_net_states = []
             client_accuracy = []
             client_train_time = []
-            client_head_states = []
 
             active_clients = self.select_clients()
             for client in active_clients:
@@ -51,17 +51,17 @@ class MethodServer(BaseServer):
                 end_time = time.time()
                 client_net_states.append(report['backbone'])
                 client_accuracy.append(report['accuracy'])
-                client_head_states.append(report['head_states'])
+                self.aux_heads[client.cid] = copy.deepcopy(report['head_states'])
                 client_train_time.append(end_time - start_time)
                 logger.info(f"client{client.cid} training time: {end_time - start_time}")
 
             global_net_state = self.model_average(client_net_states, client_weights)
-            aux_heads = self.auxiliary_head_select(client_head_states)
+            aux_heads = self.auxiliary_head_select()
             for client in self.clients:
                 if self.avg_head:
                     client.backbone.load_state_dict(global_net_state)
                 else:
-                    tmp_fc_state = client.backbone.fc.state_dict()
+                    tmp_fc_state = copy.deepcopy(client.backbone.fc.state_dict())
                     client.backbone.load_state_dict(global_net_state)
                     client.backbone.fc.load_state_dict(tmp_fc_state)
                 client.auxiliary_head.load_state_dict(aux_heads[client.cid])
