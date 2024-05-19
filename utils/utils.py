@@ -12,6 +12,8 @@ from src.algorithm.FedCal.client_fedcal import FedCalClient
 from src.algorithm.FedCal.server_fedcal import FedCalServer
 from src.algorithm.FedICON.client_fedicon import FedICONClient
 from src.algorithm.FedICON.server_fedicon import FedICONServer
+from src.algorithm.FedIIR.client_fediir import FedIIRClient
+from src.algorithm.FedIIR.server_fediir import FedIIRServer
 from src.algorithm.FedTHE.client_fedthe import FedTHEClient
 from src.algorithm.FedTHE.server_fedthe import FedTHEServer
 from src.algorithm.Method.client_method import MethodClient
@@ -51,5 +53,7 @@ def prepare_server_and_clients(configs):
         return FedCalServer, FedCalClient
     elif configs.method == 'method':
         return MethodServer, MethodClient
+    elif configs.method == 'fediir':
+        return FedIIRServer, FedIIRClient
     else:
         raise ValueError(f"method {configs.method} is not supported")

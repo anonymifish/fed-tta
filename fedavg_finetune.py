@@ -16,10 +16,11 @@ from utils.utils import make_save_path, set_seed
 
 parser = argparse.ArgumentParser(description='arguments for linear probing')
 parser.add_argument('--debug', type=bool, default=True)
+parser.add_argument('--use_profile', type=bool, default=False)
 parser.add_argument('--seed', type=int, default=42)
-parser.add_argument('--method', type=str, default='fedicon')
+parser.add_argument('--method', type=str, default='fedavg')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='debug_5epoch')
+parser.add_argument('--task_name', type=str, default='default_setting')
 parser.add_argument('--step', type=str, default='train')
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='sketch')
@@ -38,7 +39,7 @@ parser.add_argument('--batch_size', type=int, default=32, help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.0)
 parser.add_argument('--weight_decay', type=float, default=5e-4)
-parser.add_argument('--model_name', type=str, default='model_round85.pt')
+parser.add_argument('--model_name', type=str, default='model_round100.pt')
 parser.add_argument('--test_batch_size', type=int, default=8)
 parser.add_argument('--finetune_model_name', type=str, default='finetune_model_20.pt')
 parser.add_argument('--finetune_epochs', type=int, default=20)
@@ -46,13 +47,20 @@ parser.add_argument('--finetune_epochs', type=int, default=20)
 
 def fedavg_test_cifar(configs, server, checkpoint):
     corrupt_list = ['glass_blur', 'motion_blur', 'contrast', 'impulse_noise', 'gaussian_blur']
-    no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
+    uniform, no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
 
     def load_checkpoint():
         server.backbone.load_state_dict(checkpoint['backbone'])
         for cid, client_checkpoint in enumerate(checkpoint['clients']):
             server.clients[cid].backbone.load_state_dict(checkpoint['backbone'])
             server.clients[cid].backbone.fc.load_state_dict(client_checkpoint['fc'])
+
+    load_checkpoint()
+    logger.info(f"test uniform contrast shift severity = 3 dataset...")
+    for cid, client in enumerate(server.clients):
+        client.set_test_set(uniform, configs.test_batch_size)
+    shift_accuracy = server.test()
+    logger.info(f"test uniform contrast shift severity = 3 dataset accuracy: {shift_accuracy}")
 
     for name, dataset in zip(['no-shift', 'label_shift'], [no_shift, label_shift]):
         load_checkpoint()
@@ -206,7 +214,7 @@ def prepare_model():
 
     logger.info("prepare server and clients...")
     device = torch.device(configs.device)
-    server = FedAvgServer(device, backbone, configs)
+    server = FedAvgServer(device, backbone, configs, None)
     clients = [FedAvgClient(cid, device, backbone, configs) for cid in range(configs.num_client)]
     for cid, client in enumerate(clients):
         client.set_train_set(train_datasets[cid])

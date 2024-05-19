@@ -266,7 +266,7 @@ class ResNet(nn.Module):
     def clip_bn_running_vars(self):
         for m in self.modules():
             if isinstance(m, GradBatchNorm2d):
-                m.clip_bn_running_var()
+                m.clip_running_var()
 
 
 def resnet18(**kwargs: Any) -> ResNet:

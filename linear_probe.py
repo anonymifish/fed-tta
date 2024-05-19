@@ -17,9 +17,9 @@ from utils.utils import set_seed, make_save_path
 
 parser = argparse.ArgumentParser(description='arguments for linear probing')
 parser.add_argument('--seed', type=int, default=42)
-parser.add_argument('--method', type=str, default='fedicon')
+parser.add_argument('--method', type=str, default='fedcal')
 parser.add_argument('--backbone', type=str, default='lenet', choices=['resnet', 'simplecnn', 'shallowcnn', 'lenet'])
-parser.add_argument('--task_name', type=str, default='1epoch_flip_1x20')
+parser.add_argument('--task_name', type=str, default='debug')
 parser.add_argument('--step', type=str, default='test')
 parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--leave_one_out', type=str, default='cartoon')
@@ -32,7 +32,7 @@ parser.add_argument('--new_dataset_seed', type=int, default=30, help='seed to sp
 parser.add_argument('--device', type=str, default='cuda:0', help='device')
 parser.add_argument('--checkpoint_path', type=str, default='default', help='check point path')
 parser.add_argument('--epochs', type=int, default=200, help='linear probe epochs')
-parser.add_argument('--model_name', type=str, default='model_round50.pt')
+parser.add_argument('--model_name', type=str, default='model_round100.pt')
 
 
 def train_linear_and_test(backbone, device, dataset, epochs):
@@ -91,7 +91,7 @@ def linear_probing():
     logger.info("prepare dataset...")
     corrupt_list = ['glass_blur', 'motion_blur', 'contrast', 'impulse_noise', 'gaussian_blur']
     if configs.dataset in ['cifar10', 'cifar100']:
-        no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
+        _, no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
         data_size = 32
         data_shape = [3, 32, 32]
     elif configs.dataset in ['digit-5', 'PACS', 'office-10', 'domain-net']:
@@ -114,7 +114,7 @@ def linear_probing():
 
     checkpoint_path = os.path.join(configs.checkpoint_path, configs.model_name)
     checkpoint = torch.load(checkpoint_path)
-    if configs.method in ['fedavg']:
+    if configs.method in ['fedavg', 'fedcal']:
         backbone.load_state_dict(checkpoint)
     else:
         backbone.load_state_dict(checkpoint['backbone'])

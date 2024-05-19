@@ -14,7 +14,7 @@ from utils.utils import set_seed, make_save_path, prepare_server_and_clients
 
 def test_cifar(configs):
     corrupt_list = ['glass_blur', 'motion_blur', 'contrast', 'impulse_noise', 'gaussian_blur']
-    no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
+    uniform_test, no_shift, label_shift, covariate_shift, hybrid_shift, num_class = load_cifar(configs, corrupt_list)
     data_size = 32
     data_shape = [3, 32, 32]
 
@@ -37,6 +37,15 @@ def test_cifar(configs):
 
     checkpoint_path = os.path.join(configs.checkpoint_path, configs.model_name)
     checkpoint = torch.load(checkpoint_path)
+
+    server.load_checkpoint(checkpoint)
+    logger.info(f"test uniform contrast shift severity = 3 dataset...")
+    for cid, client in enumerate(server.clients):
+        client.set_test_set(uniform_test, configs.test_batch_size)
+    plain_shift_accuracy = server.plain_test()
+    logger.info(f"plain-test uniform contrast shift severity = 3 dataset accuracy: {plain_shift_accuracy}")
+    shift_accuracy = server.test()
+    logger.info(f"test uniform contrast shift severity = 3 dataset accuracy: {shift_accuracy}")
 
     for name, dataset in zip(['no-shift', 'label_shift'], [no_shift, label_shift]):
         server.load_checkpoint(checkpoint)
@@ -95,7 +104,7 @@ def test_domain(configs):
     logger.info("prepare server and clients...")
     server_object, client_object = prepare_server_and_clients(configs)
     device = torch.device(configs.device)
-    server = server_object(device, backbone, configs)
+    server = server_object(device, backbone, configs, None)
     clients = [client_object(cid, device, backbone, configs) for cid in range(configs.num_client)]
     server.clients.extend(clients)
 
@@ -119,7 +128,7 @@ def test():
     if configs.checkpoint_path == "default":
         setattr(configs, "checkpoint_path", save_path)
 
-    file_handler = logging.FileHandler(os.path.join(save_path, 'testfile.log'))
+    file_handler = logging.FileHandler(os.path.join(save_path, 'testfile_filter_number-1.log'))
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s')
     file_handler.setFormatter(formatter)

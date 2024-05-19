@@ -121,7 +121,7 @@ class FedTHEClient(BaseClient):
             test_representation = self.backbone.intermediate_forward(data)
             global_out = self.backbone.fc(test_representation)
             personal_out = self.personal_head(test_representation)
-            for _ in range(20):
+            for _ in range(5):
                 e_softmax = F.softmax(self.e, dim=1)
                 agg_output = e_softmax[:, 0].unsqueeze(1) * global_out.detach() + e_softmax[:, 1].unsqueeze(
                     1) * personal_out.detach()

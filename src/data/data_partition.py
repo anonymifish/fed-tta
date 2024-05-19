@@ -100,7 +100,9 @@ def load_cifar(configs, corrupt_list=None):
                     [Subset(cor_test[cor_type][severity], hybrid_shift_split[severity][idx]) for idx in
                      range(configs.num_client)])
 
-        return no_shift, label_shift, covariate_shift, hybrid_shift, num_class
+        uniform_test = cor_test['contrast'][2]
+
+        return uniform_test, no_shift, label_shift, covariate_shift, hybrid_shift, num_class
 
 
 def load_domains(configs):
